@@ -10,6 +10,8 @@ how GC-heavy some things are. Like streams. I had some streams and it was nice t
 I noticed the massive GC churn it created in a game at high framerates. So I walked it back to good
 old loops. 
 
+![WarTech Screenshot](wartech.png)
+
 ## Why this is
 
 It's an experiment, a learning journey and a bit of fun, all rolled into one. I really like Java as
