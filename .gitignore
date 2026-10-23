@@ -1,0 +1,4 @@
+# Build output
+target/
+game.wasm
+test/out/

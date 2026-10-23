@@ -1,0 +1,96 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>wartech</groupId>
+  <artifactId>wartech</artifactId>
+  <version>0.0.6</version>
+  <packaging>jar</packaging>
+  <name>WarTech</name>
+
+  <properties>
+    <teavm.version>0.16.0</teavm.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <!-- Emulator of Java class library for TeaVM -->
+    <dependency>
+      <groupId>org.teavm</groupId>
+      <artifactId>teavm-classlib</artifactId>
+      <version>${teavm.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JavaScriptObjects (JSO) - a JavaScript binding for TeaVM -->
+    <dependency>
+      <groupId>org.teavm</groupId>
+      <artifactId>teavm-jso-apis</artifactId>
+      <version>${teavm.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>25</release>
+        </configuration>
+      </plugin>
+
+      <!-- Configure TeaVM -->
+      <plugin>
+        <groupId>org.teavm</groupId>
+        <artifactId>teavm-maven-plugin</artifactId>
+        <version>${teavm.version}</version>
+        <executions>
+          <execution>
+            <id>web-client</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <targetDirectory>${project.build.directory}/generated/wasm/teavm</targetDirectory>
+
+              <!-- Main class, containing static void main(String[]) -->
+              <mainClass>wartech.bridge.BrowserApp</mainClass>
+
+              <!-- Compile to WebAssembly GC instead of JavaScript -->
+              <targetType>WEBASSEMBLY_GC</targetType>
+
+              <!-- File name of the produced .wasm module -->
+              <targetFileName>classes.wasm</targetFileName>
+
+              <!-- Whether TeaVM should produce debug information for its built-in debugger -->
+              <debugInformationGenerated>true</debugInformationGenerated>
+
+              <!-- Whether TeaVM should produce source maps file -->
+              <sourceMapsGenerated>true</sourceMapsGenerated>
+
+              <!-- Whether TeaVM should also put source files into output directory,
+                   for compatibility with source maps -->
+              <sourceFilesCopied>true</sourceFilesCopied>
+
+              <!-- Optimization level. Valid values are: SIMPLE, ADVANCED, FULL -->
+              <optimizationLevel>ADVANCED</optimizationLevel>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- WebAssembly GC modules need a small JS loader/runtime alongside the .wasm file -->
+            <id>web-client-runtime</id>
+            <goals>
+              <goal>copy-webassembly-gc-runtime</goal>
+            </goals>
+            <configuration>
+              <targetDirectory>${project.build.directory}/generated/wasm/teavm</targetDirectory>
+              <runtimeFileName>classes.wasm-runtime.js</runtimeFileName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

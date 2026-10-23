@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WARTECH RTS</title>
+  <script type="text/javascript" charset="utf-8" src="teavm/classes.wasm-runtime.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0b0a;
+      --panel-bg: rgba(26, 22, 18, 0.9);
+      --border: rgba(190, 150, 90, 0.25);
+      --accent-gold: #d4a040;
+      --accent-glow: rgba(212, 160, 64, 0.25);
+      --text: #f0e6d2;
+      --text-muted: #9c8e78;
+      --blue: #38bdf8;
+      --red: #f87171;
+      --green: #4ade80;
+      /* One 90%-of-screen block: header, frame, and footer share it. */
+      --game-width: min(90vw, calc((90vh - 110px) * 1.3333));
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 10%, #201a12 0%, var(--bg) 85%);
+      color: var(--text);
+      font-family: 'Orbitron', system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      width: var(--game-width);
+      margin-bottom: 8px;
+      flex-shrink: 0;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .title-box {
+      justify-self: start;
+    }
+
+    .title-box h1 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #f0e6d2 0%, var(--accent-gold) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .version-tag {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--accent-gold);
+      -webkit-text-fill-color: var(--accent-gold);
+      opacity: 0.75;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      justify-self: center;
+    }
+
+    .stat-pill {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+
+    .stat-val {
+      font-weight: 600;
+    }
+
+    .stat-val.credits { color: #facc15; }
+    .stat-val.power { color: var(--green); }
+    .stat-val.fps { color: #38bdf8; }
+
+    .controls-panel {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-self: end;
+    }
+
+    @media (max-width: 960px) {
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+      .title-box, .stats-bar, .controls-panel {
+        justify-self: center;
+      }
+    }
+
+    select, button {
+      background: #241c14;
+      border: 1px solid var(--accent-gold);
+      color: var(--text);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    select:hover, button:hover {
+      background: #362a1c;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* Canvas Screen Frame */
+    .viewport-frame {
+      position: relative;
+      width: var(--game-width);
+      aspect-ratio: 4 / 3;
+      flex-shrink: 1;
+      min-height: 0;
+      background: #000;
+      border: 2px solid #504030;
+      border-radius: 6px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 160, 64, 0.15);
+      overflow: hidden;
+    }
+
+    canvas#game {
+      width: 100%;
+      height: 100%;
+      display: block;
+      image-rendering: pixelated;
+      cursor: crosshair;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Help & Guide Footer */
+    footer {
+      width: var(--game-width);
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 0 4px;
+    }
+
+    .help-col {
+      display: flex;
+      gap: 6px 18px;
+      flex-wrap: wrap;
+    }
+
+    .key-badge {
+      background: #1c1812;
+      border: 1px solid #403424;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent-gold);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .btn-micro {
+      background: #241c14;
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      cursor: pointer;
+      line-height: 1;
+      transition: all 0.15s ease;
+    }
+
+    .btn-micro:hover {
+      background: #3e3020;
+      color: #fff;
+      box-shadow: 0 0 6px var(--accent-glow);
+    }
+
+    #unsupported {
+      display: none;
+      width: var(--game-width);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      text-align: center;
+      padding: 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="title-box">
+      <h1>WARTECH RTS <span class="version-tag">0.0.7</span></h1>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-pill">
+        <span class="stat-label">Credits</span>
+        <span id="credits" class="stat-val credits">1200</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Power</span>
+        <span id="power" class="stat-val power">+10</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">FPS</span>
+        <span id="fps" class="stat-val fps">60</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Zoom</span>
+        <button id="btnZoomOut" class="btn-micro" title="Zoom Out ( [ or - )">−</button>
+        <span id="zoomDisplay" class="stat-val" style="color: var(--accent-gold); min-width: 32px; text-align: center;">50%</span>
+        <button id="btnZoomIn" class="btn-micro" title="Zoom In ( ] or + )">+</button>
+      </div>
+    </div>
+
+    <div class="controls-panel">
+      <button id="btnRestart">Restart</button>
+    </div>
+  </header>
+
+  <div class="viewport-frame">
+    <canvas id="game" width="1024" height="768"></canvas>
+  </div>
+
+  <p id="unsupported">
+    Your browser doesn't support WebAssembly GC, so WarTech can't run here.
+    Please try a recent version of Chrome, Edge, Firefox, or Safari.
+  </p>
+
+  <footer>
+    <div class="help-col">
+      <span><span class="key-badge">L-Click</span> Select / Drag Box</span>
+      <span><span class="key-badge">R-Click</span> Move / Attack / Harvest</span>
+      <span><span class="key-badge">WASD / Arrows</span> Scroll Viewport</span>
+      <span><span class="key-badge">[ / ] or Wheel</span> Zoom (20% to 100%)</span>
+      <span><span class="key-badge">O</span> Toggle Directives</span>
+    </div>
+  </footer>
+
+  <script src="assets_data.js"></script>
+  <script type="module">
+    function supportsWasmGC() {
+      return typeof WebAssembly !== "undefined" && typeof WebAssembly.Tag === "function";
+    }
+
+    function showUnsupported() {
+      document.querySelector(".viewport-frame").style.display = "none";
+      document.getElementById("unsupported").style.display = "block";
+    }
+
+    if (!supportsWasmGC()) {
+      showUnsupported();
+    } else {
+      try {
+        const teavm = await TeaVM.wasmGC.load("teavm/classes.wasm");
+        teavm.exports.main([]);
+      } catch (e) {
+        console.error(e);
+        showUnsupported();
+      }
+    }
+  </script>
+</body>
+
+</html>
