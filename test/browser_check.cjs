@@ -4,7 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const dir = path.resolve(process.argv[2] || 'dist');
+const dir = path.resolve(process.argv[2] || 'docs');
 const SECONDS = parseFloat(process.argv[3] || '4');
 const CHROME = process.argv[4] || process.env.CHROME
   || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';

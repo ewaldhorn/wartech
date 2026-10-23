@@ -129,7 +129,7 @@ tools_convert_assets.py  PNG -> assets_data.js (see Asset pipeline)
 test/browser_check.cjs   Headless end-to-end check (above)
 test/input_tour.cjs      Headless input tour: setup, deploy, orders, briefing (above)
 test/sim/SimCheck.java   Headless sim invariants: corner escape, AI yard gate, AI pipeline (above)
-dist/ target/ test/out/  Git-ignored build/test outputs
+target/ test/out/        Git-ignored build/test outputs
 ```
 
 ## Game Architecture
