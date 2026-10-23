@@ -24,7 +24,7 @@ import wartech.unit.UnitSpatialGrid;
 import wartech.unit.UnitType;
 
 public class WarTech {
-    public static final String VERSION = "0.0.7";
+    public static final String VERSION = BuildVersion.VERSION;
 
     public static final int WIDTH = Display.WIDTH;
     public static final int HEIGHT = Display.HEIGHT;

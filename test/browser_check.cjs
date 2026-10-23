@@ -11,6 +11,8 @@ const CHROME = process.argv[4] || process.env.CHROME
 const PORT = 8400 + Math.floor(Math.random() * 500);
 const DEV = 9400 + Math.floor(Math.random() * 500);
 const OUT = path.resolve('test/out');
+const POM_VERSION = fs.readFileSync(path.resolve('pom.xml'), 'utf8')
+  .match(/<artifactId>wartech<\/artifactId>\s*<version>([^<]+)<\/version>/)[1];
 
 if (!fs.existsSync(path.join(dir, 'teavm', 'classes.wasm'))) {
   console.error(`no module in ${dir} -- run ./build-dist.sh first`);
@@ -108,11 +110,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
           if (d[i] > 0 || d[i+1] > 0 || d[i+2] > 0) nonZero++;
         }
       }
+      const versionEl = document.getElementById('version');
       return {
         fps: fps ? fps.textContent : null,
         credits: credits ? credits.textContent : null,
         power: power ? power.textContent : null,
         zoom: zoom ? zoom.textContent : null,
+        version: versionEl ? versionEl.textContent : null,
         canvas: cv ? cv.width + 'x' + cv.height : null,
         sampled, nonZero,
         ready: window.__wartechReady === true
@@ -123,6 +127,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     fs.writeFileSync(path.join(OUT, 'screenshot.png'), Buffer.from(screenshot.data, 'base64'));
 
     console.log(`wartechReady      ${state.ready ? 'READY' : 'MISSING'}`);
+    console.log(`version tag       ${state.version} (pom: ${POM_VERSION})`);
     console.log(`HUD values        credits=${state.credits}, power=${state.power}, zoom=${state.zoom}, fps=${state.fps}`);
     console.log(`canvas buffer     ${state.canvas}, drawn pixels: ${state.nonZero}/${state.sampled}`);
     console.log(`screenshot        staged at ${path.join(OUT, 'screenshot.png')}`);
@@ -181,6 +186,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
     if (!state.ready) {
       console.error('FAIL: window.__wartechReady was not set by the TeaVM module');
+      process.exit(1);
+    }
+
+    if (state.version !== POM_VERSION) {
+      console.error(`FAIL: version tag shows "${state.version}", want pom version "${POM_VERSION}"`);
       process.exit(1);
     }
 

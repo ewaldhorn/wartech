@@ -35,6 +35,7 @@ public final class BrowserApp {
     private static HTMLElement creditsEl;
     private static HTMLElement powerEl;
     private static HTMLElement zoomEl;
+    private static HTMLElement versionEl;
     private static HTMLElement btnRestart;
     private static HTMLElement btnZoomIn;
     private static HTMLElement btnZoomOut;
@@ -112,6 +113,7 @@ public final class BrowserApp {
         btnRestart = document.getElementById("btnRestart");
         btnZoomIn = document.getElementById("btnZoomIn");
         btnZoomOut = document.getElementById("btnZoomOut");
+        versionEl = document.getElementById("version");
 
         try {
             AssetData.init();
@@ -128,6 +130,7 @@ public final class BrowserApp {
         bindKeys();
         bindWindowEvents();
         updateHUD();
+        if (versionEl != null) versionEl.setInnerText(WarTech.VERSION);
         setReadyFlag(true);
         lastTime = Performance.now();
         lastFpsTime = lastTime;

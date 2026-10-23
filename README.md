@@ -205,9 +205,8 @@ issues as it will try to load an incompatible save file.
 2. Edit `WarTech.UNIT_ORDER` `BUILD_ORDER`, the AI build lists, and any faction mirrors.
 
 ### Bumping the version
-1. Change in `pom.xml` 
-2. Change in `WarTech.VERSION` in the `WarTech.java` file
-3. Update `version-tag` in `index.html` 
+1. Change `<version>` in `pom.xml`. The build step will update the `BuildVersion` class, which, 
+in turn, should update the game version in the `index.html` file upon load success.
 
 ## Troubleshooting
 
