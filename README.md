@@ -46,12 +46,15 @@ There's base building, economy and power management as well as, of course, comba
 
 I am working on touch/mobile/tablet support, it's got a few annoying bugs still. It seems to work
 alright on desktop, though a trackpad kind of sucks. Zoom sort of works now, but it can jump around
-a tad bit. I still need to add groups etc. but, for now, it's playable.
+a tad bit.
 
 | Input | Action |
 |---|---|
 | Left click / drag | Select unit, building, or drag a selection box |
 | Right click | Move / attack / harvest order at cursor |
+| `Ctrl+1`–`Ctrl+9` | Assign selection to group 1–9 |
+| `Ctrl+0` | Remove selection from its group |
+| `1`–`9` | Select group; press again to center on it |
 | WASD / arrow keys | Scroll viewport |
 | `[` / `]` or `-` / `+` or mouse wheel | Zoom 20%–100% |
 | `O` | Toggle objectives tracker |

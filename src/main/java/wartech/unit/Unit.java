@@ -25,6 +25,11 @@ public final class Unit {
     public boolean active = true;
     public boolean selected = false;
 
+    public static final int GROUP_NONE = 0;
+    public static final int GROUP_MAX = 9;
+
+    public int group = GROUP_NONE;
+
     public static final double CLIFF_BARRIER_MARGIN = 3.5;
     public static final double MAX_OBSTACLE_CLEARANCE = 28.0;
 

@@ -155,6 +155,7 @@ public class WarTech {
     public boolean keyRight = false;
     public boolean keyUp = false;
     public boolean keyDown = false;
+    public boolean ctrlHeld = false;
 
     public static void wasm_init(int mapSizeCode) {
         if (instance == null) {
@@ -354,6 +355,7 @@ public class WarTech {
         this.keyRight = false;
         this.keyUp = false;
         this.keyDown = false;
+        this.ctrlHeld = false;
         this.unitsKilled = 0;
         this.unitsLost = 0;
         this.buildingsDestroyed = 0;

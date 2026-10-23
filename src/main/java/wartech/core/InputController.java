@@ -264,6 +264,7 @@ public class InputController {
         game.keyRight = false;
         game.keyUp = false;
         game.keyDown = false;
+        game.ctrlHeld = false;
         objectivesKeyLatched = false;
     }
 
@@ -505,6 +506,11 @@ public class InputController {
 
 
     public void setKey(int code, boolean isDown) {
+        if (code == KeyCode.CONTROL) {
+            game.ctrlHeld = isDown;
+            return;
+        }
+
         if (!isDown && code == KeyCode.O) {
             objectivesKeyLatched = false;
         }
@@ -566,6 +572,12 @@ public class InputController {
                 game.zoomIn();
                 return;
             }
+            if (code >= KeyCode.DIGIT0 && code <= KeyCode.DIGIT9) {
+                if (game.matchState == MatchState.IN_PROGRESS) {
+                    handleGroupKey(code - KeyCode.DIGIT0);
+                }
+                return;
+            }
         }
 
         switch (code) {
@@ -575,5 +587,86 @@ public class InputController {
             case KeyCode.DOWN, KeyCode.S -> game.keyDown = isDown;
             default -> { }
         }
+    }
+
+    private void handleGroupKey(int digit) {
+        if (game.ctrlHeld) {
+            assignGroup(digit);
+        } else if (digit >= 1 && digit <= Unit.GROUP_MAX) {
+            recallGroup(digit);
+        }
+    }
+
+    private void assignGroup(int digit) {
+        if (digit == Unit.GROUP_NONE) {
+            int cleared = 0;
+            for (int i = 0; i < game.unitCount; i++) {
+                var u = game.units[i];
+                if (u.selected && u.faction == Faction.PLAYER && !u.isDestroyed() && u.group != Unit.GROUP_NONE) {
+                    u.group = Unit.GROUP_NONE;
+                    cleared++;
+                }
+            }
+            game.statusToast = cleared > 0 ? "REMOVED FROM GROUP" : "NO UNITS SELECTED";
+            return;
+        }
+        int count = 0;
+        for (int i = 0; i < game.unitCount; i++) {
+            var u = game.units[i];
+            if (u.isDestroyed() || u.faction != Faction.PLAYER) continue;
+            if (u.selected) {
+                u.group = digit;
+                count++;
+            } else if (u.group == digit) {
+                u.group = Unit.GROUP_NONE;
+            }
+        }
+        game.statusToast = count > 0 ? "GROUP " + digit + " ASSIGNED (" + count + ")" : "NO UNITS SELECTED";
+    }
+
+    private void recallGroup(int digit) {
+        int count = 0;
+        double sumX = 0.0;
+        double sumY = 0.0;
+        for (int i = 0; i < game.unitCount; i++) {
+            var u = game.units[i];
+            if (u.isDestroyed() || u.faction != Faction.PLAYER || u.group != digit) continue;
+            count++;
+            sumX += u.x;
+            sumY += u.y;
+        }
+        if (count == 0) {
+            game.statusToast = "GROUP " + digit + " EMPTY";
+            return;
+        }
+        if (selectionMatchesGroup(digit)) {
+            game.camera.centerOn(sumX / count, sumY / count);
+            game.statusToast = "GROUP " + digit;
+            return;
+        }
+        game.selectedBuilding = null;
+        game.selectedUnit = null;
+        for (int i = 0; i < game.unitCount; i++) {
+            var u = game.units[i];
+            if (u.isDestroyed() || u.faction != Faction.PLAYER) {
+                u.selected = false;
+                continue;
+            }
+            u.selected = u.group == digit;
+            if (u.selected && game.selectedUnit == null) {
+                game.selectedUnit = u;
+            }
+        }
+        game.statusToast = "GROUP " + digit + " (" + count + ")";
+    }
+
+    private boolean selectionMatchesGroup(int digit) {
+        if (game.selectedBuilding != null) return false;
+        for (int i = 0; i < game.unitCount; i++) {
+            var u = game.units[i];
+            if (u.isDestroyed() || u.faction != Faction.PLAYER) continue;
+            if (u.selected != (u.group == digit)) return false;
+        }
+        return true;
     }
 }

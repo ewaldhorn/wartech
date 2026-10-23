@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import wartech.building.BuildingType;
 import wartech.combat.Effect;
 import wartech.core.Faction;
+import wartech.core.KeyCode;
 import wartech.core.MatchState;
 import wartech.core.WarTech;
 import wartech.map.GameMap;
@@ -566,7 +567,105 @@ public class SimCheck {
                 "order-marker move ping spawns at the waypoint");
     }
 
+    /**
+     * Control groups 1-9: Ctrl+digit assigns the current selection, digit
+     * recalls it, and pressing a recalled group again centers the camera on
+     * it. A unit belongs to at most one group; Ctrl+0 drops the selection
+     * from its group. Plain 0 is a no-op: there is no group 0.
+     */
+    private static void testControlGroups() throws Exception {
+        freshMatch();
+        WarTech g = liveGame();
+        killAllUnits(g);
+        stepRaw(2);
+
+        double cx = (g.map.width / 2) * GameMap.TILE_SIZE;
+        double cy = (g.map.height / 2) * GameMap.TILE_SIZE;
+        Unit a = new Unit(UnitType.TROOPER_RIFLE, Faction.PLAYER, cx - 40.0, cy);
+        Unit b = new Unit(UnitType.TROOPER_RIFLE, Faction.PLAYER, cx + 40.0, cy);
+        Unit c = new Unit(UnitType.TROOPER_RIFLE, Faction.PLAYER, cx + 400.0, cy);
+        g.addUnit(a);
+        g.addUnit(b);
+        g.addUnit(c);
+
+        check(a.group == Unit.GROUP_NONE && b.group == Unit.GROUP_NONE && c.group == Unit.GROUP_NONE,
+                "group fresh units belong to no group");
+
+        a.selected = true;
+        b.selected = true;
+        pressCtrlDigit(1);
+        check(a.group == 1 && b.group == 1 && c.group == Unit.GROUP_NONE,
+                "group ctrl+1 assigns the selection");
+
+        // Single membership: moving a to group 2 pulls it out of group 1.
+        clearSelection(g);
+        a.selected = true;
+        pressCtrlDigit(2);
+        check(a.group == 2 && b.group == 1 && c.group == Unit.GROUP_NONE,
+                "group a unit belongs to only one group");
+
+        // Replace: group 1 becomes exactly the new selection.
+        clearSelection(g);
+        c.selected = true;
+        pressCtrlDigit(1);
+        check(c.group == 1 && b.group == Unit.GROUP_NONE && a.group == 2,
+                "group reassign replaces membership");
+
+        // Recall selects without moving the camera...
+        g.camera.centerOn(200.0, 200.0);
+        double parkedX = g.camera.x;
+        double parkedY = g.camera.y;
+        clearSelection(g);
+        pressDigit(1);
+        check(c.selected && !a.selected && !b.selected && g.selectedUnit == c && g.selectedBuilding == null,
+                "group digit recalls the group");
+        check(g.camera.x == parkedX && g.camera.y == parkedY,
+                "group recall leaves the camera alone");
+
+        // ...and pressing again centers on the group.
+        pressDigit(1);
+        double centerX = g.camera.x + g.camera.getWorldViewWidth() / 2.0;
+        double centerY = g.camera.y + g.camera.getWorldViewHeight() / 2.0;
+        check(Math.abs(centerX - c.x) < 1.0 && Math.abs(centerY - c.y) < 1.0,
+                "group second press centers the camera");
+        check(c.selected && g.selectedUnit == c, "group center keeps the selection");
+
+        // Empty group: feedback, selection untouched.
+        pressDigit(9);
+        check("GROUP 9 EMPTY".equals(g.statusToast), "group empty recall reports empty");
+        check(c.selected && g.selectedUnit == c, "group empty recall keeps selection");
+
+        // Ctrl+0 drops the selection from its group; plain 0 does nothing.
+        pressCtrlDigit(0);
+        check(c.group == Unit.GROUP_NONE && a.group == 2,
+                "group ctrl+0 removes the selection from its group");
+        String toast = g.statusToast;
+        pressDigit(0);
+        check(c.selected && g.statusToast.equals(toast), "group plain 0 is a no-op");
+
+        check(!g.ctrlHeld, "group ctrl releases cleanly");
+    }
+
+    private static void clearSelection(WarTech g) {
+        for (int i = 0; i < g.unitCount; i++) g.units[i].selected = false;
+        g.selectedUnit = null;
+        g.selectedBuilding = null;
+    }
+
+    private static void pressCtrlDigit(int digit) {
+        WarTech.wasm_key_down(KeyCode.CONTROL);
+        WarTech.wasm_key_down(KeyCode.DIGIT0 + digit);
+        WarTech.wasm_key_up(KeyCode.DIGIT0 + digit);
+        WarTech.wasm_key_up(KeyCode.CONTROL);
+    }
+
+    private static void pressDigit(int digit) {
+        WarTech.wasm_key_down(KeyCode.DIGIT0 + digit);
+        WarTech.wasm_key_up(KeyCode.DIGIT0 + digit);
+    }
+
     public static void main(String[] args) throws Exception {
+        testControlGroups();
         testOrderMarkers();
         testGuardEngagesSkitterers();
         testMedicHoldsFire();
