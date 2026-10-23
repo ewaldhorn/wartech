@@ -10,6 +10,8 @@ how GC-heavy some things are. Like streams. I had some streams and it was nice t
 I noticed the massive GC churn it created in a game at high framerates. So I walked it back to good
 old loops. 
 
+Play it in your browser: [WarTech](https://ewaldhorn.github.io/wartech/)
+
 ![WarTech Screenshot](wartech.png)
 
 ## Why this is
