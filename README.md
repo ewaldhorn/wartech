@@ -65,12 +65,12 @@ Python 3 to rebuild assets, only if you change stuff.
 Tests need Node.js 22+ and Chrome, but who tests these days?
 
 ```sh
-./build-dist.sh   # mvn package + stage a static dist/ folder
-./serve.sh        # serve dist/ at http://127.0.0.1:8080/ (supposed to build it if needed)
+./build-dist.sh   # mvn package + stage a static docs/ folder
+./serve.sh        # serve docs/ at http://127.0.0.1:8080/ (supposed to build it if needed)
 ```
 
 Then open http://127.0.0.1:8080/ in a recent browser with WebAssembly GC. No app server needed, 
-`dist/` contains just static files and can be hosted just about anywhere.
+`docs/` contains just static files and can be hosted just about anywhere.
 
 `PORT=9000 ./serve.sh` overrides the port. 
 `build-dist.sh` prints the module sizes when done, because, why not?
@@ -79,7 +79,7 @@ Then open http://127.0.0.1:8080/ in a recent browser with WebAssembly GC. No app
 
 ```sh
 node test/browser_check.cjs [dir] [seconds] [chrome-binary]
-# defaults: dist, 4s, /Applications/Google Chrome.app/... (or $CHROME)
+# defaults: docs, 4s, /Applications/Google Chrome.app/... (or $CHROME)
 node test/input_tour.cjs [dir] [stage|all] [chrome-binary]
 # stages: 1 = setup + deploy + battlefield input, 2 = skirmish card, 3 = campaign + briefing
 ./test-sim.sh
@@ -88,7 +88,7 @@ node test/input_tour.cjs [dir] [stage|all] [chrome-binary]
 
 `test-sim.sh` always rebuilds from clean as a stale build is just annoying. 
 
-The check serves `dist/` over HTTP, drives headless Chrome over CDP, and asserts: the TeaVM module
+The check serves `docs/` over HTTP, drives headless Chrome over CDP, and asserts: the TeaVM module
 boots (`window.__wartechReady`), a Space keypress deploys from the setup screen to the battlefield,
 the viewport shows real sprite variety (≥60 distinct colors guards against solid-block rendering),
 and no console errors or uncaught exceptions occur. HUD values and canvas pixel stats are logged
