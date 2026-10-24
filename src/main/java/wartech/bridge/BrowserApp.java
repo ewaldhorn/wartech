@@ -441,10 +441,12 @@ public final class BrowserApp {
     private static boolean focusInControl() {
         HTMLElement active = document.getActiveElement();
         if (active == null) return false;
-        String tag = active.getTagName();
-        return "BUTTON".equals(tag) || "INPUT".equals(tag)
-            || "SELECT".equals(tag) || "TEXTAREA".equals(tag);
+        return switch (active.getTagName()) {
+            case "BUTTON", "INPUT", "SELECT", "TEXTAREA" -> true;
+            default -> false;
+        };
     }
+
 
     private static void bindKeys() {
         Window.current().onKeyDown(e -> {
