@@ -214,7 +214,7 @@ in turn, should update the game version in the `index.html` file upon load succe
 ## Troubleshooting
 
 - Blank page or "doesn't support WebAssembly GC": use a current browser, `file://` won't load `.wasm`, must serve over HTTP.
-- `no module in dist` from the check: run `./build-dist.sh` first, but the script should have done this.
+- `no module in docs` from the check: run `./build-dist.sh` first, but the script should have done this.
 - Chrome not found: pass the binary path or set `$CHROME`, tests couldn't find the headless browser.
 
 ## Have fun
