@@ -403,50 +403,40 @@ public final class BrowserApp {
     }
 
     private static int mapKey(String code) {
-        switch (code) {
-            case "ArrowLeft": return KeyCode.LEFT;
-            case "ArrowUp": return KeyCode.UP;
-            case "ArrowRight": return KeyCode.RIGHT;
-            case "ArrowDown": return KeyCode.DOWN;
-            case "Enter": return KeyCode.ENTER;
-            case "Escape": return KeyCode.ESCAPE;
-            case "Space": return KeyCode.SPACE;
-            case "KeyA": return KeyCode.A;
-            case "KeyD": return KeyCode.D;
-            case "KeyO": return KeyCode.O;
-            case "KeyS": return KeyCode.S;
-            case "KeyW": return KeyCode.W;
-            case "ControlLeft": return KeyCode.CONTROL;
-            case "ControlRight": return KeyCode.CONTROL;
-            case "Digit0": return KeyCode.DIGIT0;
-            case "Digit1": return KeyCode.DIGIT1;
-            case "Digit2": return KeyCode.DIGIT2;
-            case "Digit3": return KeyCode.DIGIT3;
-            case "Digit4": return KeyCode.DIGIT4;
-            case "Digit5": return KeyCode.DIGIT5;
-            case "Digit6": return KeyCode.DIGIT6;
-            case "Digit7": return KeyCode.DIGIT7;
-            case "Digit8": return KeyCode.DIGIT8;
-            case "Digit9": return KeyCode.DIGIT9;
-            case "Numpad0": return KeyCode.DIGIT0;
-            case "Numpad1": return KeyCode.DIGIT1;
-            case "Numpad2": return KeyCode.DIGIT2;
-            case "Numpad3": return KeyCode.DIGIT3;
-            case "Numpad4": return KeyCode.DIGIT4;
-            case "Numpad5": return KeyCode.DIGIT5;
-            case "Numpad6": return KeyCode.DIGIT6;
-            case "Numpad7": return KeyCode.DIGIT7;
-            case "Numpad8": return KeyCode.DIGIT8;
-            case "Numpad9": return KeyCode.DIGIT9;
-            case "Equal": return KeyCode.EQUALS;
-            case "Minus": return KeyCode.MINUS;
-            case "NumpadAdd": return KeyCode.NUMPAD_ADD;
-            case "NumpadSubtract": return KeyCode.NUMPAD_SUBTRACT;
-            case "BracketLeft": return KeyCode.BRACKET_LEFT;
-            case "BracketRight": return KeyCode.BRACKET_RIGHT;
-            default: return KeyCode.UNKNOWN;
-        }
+        return switch (code) {
+            case "ArrowLeft" -> KeyCode.LEFT;
+            case "ArrowUp" -> KeyCode.UP;
+            case "ArrowRight" -> KeyCode.RIGHT;
+            case "ArrowDown" -> KeyCode.DOWN;
+            case "Enter" -> KeyCode.ENTER;
+            case "Escape" -> KeyCode.ESCAPE;
+            case "Space" -> KeyCode.SPACE;
+            case "KeyA" -> KeyCode.A;
+            case "KeyD" -> KeyCode.D;
+            case "KeyO" -> KeyCode.O;
+            case "KeyS" -> KeyCode.S;
+            case "KeyW" -> KeyCode.W;
+            case "ControlLeft", "ControlRight" -> KeyCode.CONTROL;
+            case "Digit0", "Numpad0" -> KeyCode.DIGIT0;
+            case "Digit1", "Numpad1" -> KeyCode.DIGIT1;
+            case "Digit2", "Numpad2" -> KeyCode.DIGIT2;
+            case "Digit3", "Numpad3" -> KeyCode.DIGIT3;
+            case "Digit4", "Numpad4" -> KeyCode.DIGIT4;
+            case "Digit5", "Numpad5" -> KeyCode.DIGIT5;
+            case "Digit6", "Numpad6" -> KeyCode.DIGIT6;
+            case "Digit7", "Numpad7" -> KeyCode.DIGIT7;
+            case "Digit8", "Numpad8" -> KeyCode.DIGIT8;
+            case "Digit9", "Numpad9" -> KeyCode.DIGIT9;
+            case "Equal" -> KeyCode.EQUALS;
+            case "Minus" -> KeyCode.MINUS;
+            case "NumpadAdd" -> KeyCode.NUMPAD_ADD;
+            case "NumpadSubtract" -> KeyCode.NUMPAD_SUBTRACT;
+            case "BracketLeft" -> KeyCode.BRACKET_LEFT;
+            case "BracketRight" -> KeyCode.BRACKET_RIGHT;
+            default -> KeyCode.UNKNOWN;
+        };
     }
+
 
     private static boolean focusInControl() {
         HTMLElement active = document.getActiveElement();
