@@ -93,7 +93,7 @@ public class ThreatSystem {
         double bestDistSq = SALVAGE_SEARCH_RADIUS * SALVAGE_SEARCH_RADIUS;
         for (int i = 0; i < game.wreckCount; i++) {
             var w = game.wrecks[i];
-            if (w == null || !w.active || w.scrapValue <= 0) continue;
+            if (!w.active || w.scrapValue <= 0) continue;
             double dx = w.x - u.x;
             double dy = w.y - u.y;
             double dSq = dx * dx + dy * dy;
