@@ -437,7 +437,6 @@ public final class BrowserApp {
         };
     }
 
-
     private static boolean focusInControl() {
         HTMLElement active = document.getActiveElement();
         if (active == null) return false;
@@ -446,7 +445,6 @@ public final class BrowserApp {
             default -> false;
         };
     }
-
 
     private static void bindKeys() {
         Window.current().onKeyDown(e -> {
