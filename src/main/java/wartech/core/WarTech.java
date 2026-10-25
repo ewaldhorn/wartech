@@ -61,19 +61,25 @@ public class WarTech {
     public final Effect[] effects = new Effect[MAX_EFFECTS];
     public int effectCount = 0;
 
+    public final Wreckage[] wrecks = new Wreckage[MAX_WRECKS];
+    public int wreckCount = 0;
+
     private void initPools() {
         for (int i = 0; i < MAX_PROJECTILES; i++) {
             projectiles[i] = new Projectile(0.0, 0.0, 0.0, 0.0, 0.0, 0, Faction.PLAYER, false, 0.0, null);
             projectiles[i].active = false;
         }
+        
         for (int i = 0; i < MAX_EFFECTS; i++) {
             effects[i] = new Effect(Effect.TYPE_EXPLOSION, 0.0, 0.0, 0.0, 0.0);
             effects[i].active = false;
         }
-    }
 
-    public final Wreckage[] wrecks = new Wreckage[MAX_WRECKS];
-    public int wreckCount = 0;
+        for (int i = 0; i < MAX_WRECKS; i++) {
+            wrecks[i] = new Wreckage(0.0, 0.0, 0);
+            wrecks[i].active = false;
+        }
+    }
 
     public static final int MAX_CREDITS = 99999;
     public static final double REFINERY_DEPOSIT_RADIUS = 139.0;
@@ -303,9 +309,9 @@ public class WarTech {
         }
     }
 
-    public void addWreck(Wreckage w) {
+    public void spawnWreck(Unit u) {
         if (wreckCount < MAX_WRECKS) {
-            wrecks[wreckCount++] = w;
+            wrecks[wreckCount++].init(u.x, u.y, 100);
         }
     }
 
@@ -574,12 +580,15 @@ public class WarTech {
                     case PLAYER -> unitsLost++;
                     case null, default -> { }
                 }
+                
                 if (campaignManager != null) {
                     campaignManager.onUnitDestroyed(u, u.lastDamagerFaction);
                 }
+                
                 if (u.type.leavesWreck()) {
-                    addWreck(new Wreckage(u.x, u.y, 100));
+                    spawnWreck(u);
                 }
+
                 spawnEffect(Effect.TYPE_EXPLOSION, u.x, u.y, 0.4, u.type.radius + 11.0);
                 if (selectedUnit == u) selectedUnit = null;
                 units[i] = units[--unitCount];
