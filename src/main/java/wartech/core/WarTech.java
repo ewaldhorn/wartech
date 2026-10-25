@@ -372,7 +372,7 @@ public class WarTech {
         for (int i = 0; i < buildingCount; i++) buildings[i] = null;
         for (int i = 0; i < projectileCount; i++) projectiles[i].active = false;
         for (int i = 0; i < effectCount; i++) effects[i].active = false;
-        for (int i = 0; i < wreckCount; i++) wrecks[i] = null;
+        for (int i = 0; i < wreckCount; i++) wrecks[i].active = false;
         unitCount = 0;
         buildingCount = 0;
         projectileCount = 0;
@@ -873,8 +873,9 @@ public class WarTech {
             var wrk = wrecks[i];
             wrk.update(dt);
             if (!wrk.active) {
-                wrecks[i] = wrecks[--wreckCount];
-                wrecks[wreckCount] = null;
+                wreckCount--;
+                wrecks[i] = wrecks[wreckCount];
+                wrecks[wreckCount] = wrk;
             }
         }
     }
