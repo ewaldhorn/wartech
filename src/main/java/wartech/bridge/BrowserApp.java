@@ -496,7 +496,7 @@ public final class BrowserApp {
             }
             int save = CampaignSave.parseSave(storage.getItem(CampaignSave.SAVE_KEY));
             if (save >= 0) WarTech.wasm_load_campaign_save(save);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException _) {
             // localStorage not accessible, not sure what we should do about it yet
             // maybe an alert or something
         }
@@ -514,7 +514,7 @@ public final class BrowserApp {
                 storage.setItem(CampaignSave.SAVE_KEY, String.valueOf(save));
                 storage.setItem(CampaignSave.VERSION_STAMP_KEY, CampaignSave.CURRENT_VERSION);
             }
-        } catch (RuntimeException e) {
+        } catch (RuntimeException _) {
             // ignore for now, I don't really log things properly
         }
     }
