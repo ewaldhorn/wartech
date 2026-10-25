@@ -110,6 +110,7 @@ public final class Unit {
     public int scrapCarried = 0;
     public static final int MAX_SCRAP = 100;
     public Wreckage salvageTarget = null;
+    public int salvageTargetId = 0;
     public double salvageTimer = 0.0;
     public boolean returningScrap = false;
 

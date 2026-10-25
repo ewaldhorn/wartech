@@ -32,21 +32,24 @@ public class ThreatSystem {
             }
 
             Wreckage wreck = u.salvageTarget;
-            if (wreck != null && (!wreck.active || wreck.scrapValue <= 0)) {
+            if (wreck != null && (!wreck.active || wreck.scrapValue <= 0 || wreck.id != u.salvageTargetId)) {
                 wreck = null;
                 u.salvageTarget = null;
+                u.salvageTargetId = 0;
             }
 
             boolean hauling = u.scrapCarried >= Unit.MAX_SCRAP;
             if (!hauling && wreck == null) {
                 wreck = findWreck(u);
                 u.salvageTarget = wreck;
+                u.salvageTargetId = wreck != null ? wreck.id : 0;
                 u.salvageTimer = 0.0;
                 if (wreck == null && u.scrapCarried > 0) hauling = true;
             }
 
             if (hauling) {
                 u.salvageTarget = null;
+                u.salvageTargetId = 0;
                 double hdx = u.huntStationX - u.x;
                 double hdy = u.huntStationY - u.y;
                 if (hdx * hdx + hdy * hdy <= 64.0 * 64.0) {
@@ -78,6 +81,7 @@ public class ThreatSystem {
                 if (wreck.scrapValue <= 0) {
                     wreck.active = false;
                     u.salvageTarget = null;
+                    u.salvageTargetId = 0;
                     wreck = null;
                 }
             }

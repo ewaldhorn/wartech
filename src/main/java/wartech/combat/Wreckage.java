@@ -4,6 +4,9 @@ package wartech.combat;
 // This can be expanded to have different kinds of scrap, maybe mechanics can salvage it?
 
 public final class Wreckage {
+    private static int nextId = 0;
+
+    public int id;
     public double x;
     public double y;
     public int scrapValue;
@@ -15,6 +18,7 @@ public final class Wreckage {
     }
 
     public void init(double x, double y, int scrapValue) {
+        this.id = ++nextId;
         this.x = x;
         this.y = y;
         this.scrapValue = scrapValue;
