@@ -56,8 +56,10 @@ public final class EnemyAssault {
     }
 
     private static boolean joinsAssault(UnitType t) {
-        return t == UnitType.RAVAGER_TANK || t == UnitType.DREADNOUGHT || t == UnitType.REAVER_BUGGY
-            || t == UnitType.RAIDER || t == UnitType.VANDAL || t == UnitType.MEDIC;
+        return switch (t) {
+            case RAVAGER_TANK, DREADNOUGHT, REAVER_BUGGY, RAIDER, VANDAL, MEDIC -> true;
+            case null, default -> false;
+        };
     }
 
     private void launchAttack(WarTech game) {
