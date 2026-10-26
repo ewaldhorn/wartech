@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About WARTECH RTS — free browser strategy game by Ewald Horn</title>
+  <meta name="description" content="WarTech RTS is a free old-school 2D real-time strategy game for the browser: base building, resource harvesting, power management, and tactical combat. Written in Java, compiled to WebAssembly. Made by Ewald Horn from NoFuss Solutions." />
+  <meta name="theme-color" content="#0c0b0a" />
+  <link rel="canonical" href="https://ewaldhorn.github.io/wartech/about.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WARTECH RTS" />
+  <meta property="og:title" content="About WARTECH RTS — free browser strategy game" />
+  <meta property="og:description" content="Old-school 2D real-time strategy in your browser: base building, economy, power management, and combat. Free to play, made by Ewald Horn from NoFuss Solutions." />
+  <meta property="og:url" content="https://ewaldhorn.github.io/wartech/about.html" />
+  <meta property="og:image" content="https://ewaldhorn.github.io/wartech/wartech.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="About WARTECH RTS — free browser strategy game" />
+  <meta name="twitter:description" content="Old-school 2D real-time strategy in your browser. Free to play, made by Ewald Horn from NoFuss Solutions." />
+  <meta name="twitter:image" content="https://ewaldhorn.github.io/wartech/wartech.png" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230c0b0a'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='36' font-weight='bold' fill='%23d4a040' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "WARTECH RTS",
+    "url": "https://ewaldhorn.github.io/wartech/",
+    "applicationCategory": "Game",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "NoFuss", "url": "https://nofuss.co.za/" }
+  }
+  </script>
+  <style>
+    :root {
+      --bg: #0c0b0a;
+      --panel-bg: rgba(26, 22, 18, 0.9);
+      --border: rgba(190, 150, 90, 0.25);
+      --accent-gold: #d4a040;
+      --text: #f0e6d2;
+      --text-muted: #9c8e78;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 10%, #201a12 0%, var(--bg) 85%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Orbitron', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+      line-height: 1.7;
+    }
+
+    main {
+      width: min(720px, 100%);
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px 36px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 560px) {
+      main {
+        padding: 24px 20px;
+      }
+    }
+
+    nav {
+      width: min(720px, 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    nav a {
+      color: var(--accent-gold);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      background: linear-gradient(135deg, #f0e6d2 0%, var(--accent-gold) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+
+    .tagline {
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--accent-gold);
+      margin: 28px 0 10px;
+    }
+
+    p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    p.muted {
+      color: var(--text-muted);
+    }
+
+    ul {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin: 0 0 12px 20px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    li::marker {
+      color: var(--accent-gold);
+    }
+
+    a.inline {
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    a.inline:hover {
+      color: #fff;
+    }
+
+    .shot {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 2px solid #504030;
+      border-radius: 6px;
+      margin: 20px 0 8px;
+    }
+
+    .caption {
+      text-align: center;
+      font-size: 0.75rem;
+    }
+
+    .play-row {
+      text-align: center;
+      margin: 28px 0 8px;
+    }
+
+    .btn-play {
+      display: inline-block;
+      background: #241c14;
+      border: 1px solid var(--accent-gold);
+      color: var(--text);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 12px 32px;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-play:hover {
+      background: #362a1c;
+      box-shadow: 0 0 10px rgba(212, 160, 64, 0.25);
+    }
+
+    footer {
+      width: min(720px, 100%);
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    footer a {
+      color: var(--accent-gold);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    footer a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <a href="index.html">&larr; Play WarTech</a>
+    <span>Made by <a href="https://nofuss.co.za/" target="_blank" rel="noopener">Ewald Horn</a></span>
+  </nav>
+
+  <main>
+    <h1>WARTECH RTS</h1>
+    <p class="tagline">A free old-school 2D real-time strategy game for the browser.</p>
+
+    <div class="play-row">
+      <a class="btn-play" href="index.html">Play free in your browser</a>
+    </div>
+
+    <h2>What is WarTech?</h2>
+    <p>
+      WarTech is an old-school top-down 2D real-time strategy game that runs entirely in your
+      browser — no downloads, no installers, no accounts. Command the Vanguard against the
+      Crimson Syndicate in a story campaign, or test yourself against the AI in skirmish
+      matches on procedural maps.
+    </p>
+    <p>
+      Harvest resources, manage power, construct a base, raise an army, and outmanoeuvre the
+      enemy — the full classic RTS loop, rendered old-school style on a 1024&times;768 canvas.
+    </p>
+
+    <img class="shot" src="wartech.png" alt="WarTech RTS gameplay screenshot showing base building and combat" width="1024" height="768" />
+    <p class="caption muted">Base building, harvesting, and combat in WarTech RTS.</p>
+
+    <h2>Features</h2>
+    <ul>
+      <li>Story campaign plus AI skirmish on procedural maps</li>
+      <li>Base building with power and economy management</li>
+      <li>Combat units, turrets, harvesters — and battlefield wrecks</li>
+      <li>Tactical zoom, control groups, objectives tracker</li>
+      <li>Campaign progress saved in your browser</li>
+      <li>Free to play, no account needed</li>
+    </ul>
+
+    <h2>How to play</h2>
+    <p>
+      Left-click to select units and buildings (or drag a selection box), right-click to issue
+      move, attack, and harvest orders. Scroll the viewport with WASD or the arrow keys, zoom
+      with the mouse wheel or <kbd>[</kbd> / <kbd>]</kbd>, and press <kbd>O</kbd> to toggle the
+      objectives tracker. Full controls are listed under the game when you
+      <a class="inline" href="index.html">play WarTech</a>.
+    </p>
+
+    <h2>Under the hood</h2>
+    <p class="muted">
+      WarTech is written in Java and compiled to WebAssembly GC with TeaVM, rendering every
+      frame in software onto a 32-bit frame buffer. The simulation uses fixed-size entity pools
+      and deterministic randomness, and it can even run headless on the JVM for automated
+      testing. The source is open, make it your own!
+    </p>
+
+    <h2>Made by NoFuss</h2>
+    <p>
+      WarTech is built by <a class="inline" href="https://nofuss.co.za/" target="_blank" rel="noopener">Ewald Horn from NoFuss Solutions</a>.
+      I make fun things for the browser and beyond. If you enjoy strategy, building, and tinkering, come have a look at my other
+      <a class="inline" href="https://nofuss.co.za/toys/" target="_blank" rel="noopener">toys</a>. I also won't be terribly upset if you
+      hired me to work on your software idea. Just saying...
+    </p>
+
+    <div class="play-row">
+      <a class="btn-play" href="index.html">Play WarTech now</a>
+    </div>
+  </main>
+
+  <footer>
+    <a href="index.html">Play</a>
+    <span>·</span>
+    <a href="https://nofuss.co.za/" target="_blank" rel="noopener">NoFuss</a>
+    <span>·</span>
+    <a href="https://nofuss.co.za/toys/" target="_blank" rel="noopener">More Toys</a>
+  </footer>
+</body>
+
+</html>

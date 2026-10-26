@@ -4,7 +4,33 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WARTECH RTS</title>
+  <title>WARTECH RTS — free browser strategy game by Ewald Horn from NoFuss Solutions.</title>
+  <meta name="description" content="WarTech RTS is a free old-school top-down 2D real-time strategy game for the browser. Build bases, manage power, and command the Vanguard against the Crimson Syndicate. Made by Ewald Horn from NoFuss Solutions." />
+  <meta name="theme-color" content="#0c0b0a" />
+  <link rel="canonical" href="https://ewaldhorn.github.io/wartech/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WARTECH RTS" />
+  <meta property="og:title" content="WARTECH RTS — free browser strategy game" />
+  <meta property="og:description" content="Old-school 2D real-time strategy in your browser: base building, economy, power management, and combat. Free to play, made by Ewald Horn from NoFuss Solutions." />
+  <meta property="og:url" content="https://ewaldhorn.github.io/wartech/" />
+  <meta property="og:image" content="https://ewaldhorn.github.io/wartech/wartech.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="WARTECH RTS — free browser strategy game" />
+  <meta name="twitter:description" content="Old-school 2D real-time strategy in your browser. Free to play, made by Ewald Horn from NoFuss Solutions." />
+  <meta name="twitter:image" content="https://ewaldhorn.github.io/wartech/wartech.png" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230c0b0a'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='36' font-weight='bold' fill='%23d4a040' text-anchor='middle'%3EW%3C/text%3E%3C/svg%3E" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "WARTECH RTS",
+    "url": "https://ewaldhorn.github.io/wartech/",
+    "applicationCategory": "Game",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Organization", "name": "NoFuss", "url": "https://nofuss.co.za/" }
+  }
+  </script>
   <script type="text/javascript" charset="utf-8" src="teavm/classes.wasm-runtime.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -203,6 +229,34 @@
       flex-wrap: wrap;
     }
 
+    .credit-col {
+      display: flex;
+      gap: 6px 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .footer-link {
+      color: var(--accent-gold);
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .footer-link:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .credit-sep {
+      color: #403424;
+    }
+
+    #unsupported a {
+      color: var(--accent-gold);
+    }
+
     .key-badge {
       background: #1c1812;
       border: 1px solid #403424;
@@ -290,6 +344,9 @@
   <p id="unsupported">
     Your browser doesn't support WebAssembly GC, so WarTech can't run here.
     Please try a recent version of Chrome, Edge, Firefox, or Safari.
+    <br /><br />
+    Meanwhile, check out <a href="https://nofuss.co.za/" target="_blank" rel="noopener">NoFuss Solutions</a>
+    and my <a href="https://nofuss.co.za/toys/" target="_blank" rel="noopener">other toys</a>.
   </p>
 
   <footer>
@@ -299,6 +356,13 @@
       <span><span class="key-badge">WASD / Arrows</span> Scroll Viewport</span>
       <span><span class="key-badge">[ / ] or Wheel</span> Zoom (20% to 100%)</span>
       <span><span class="key-badge">O</span> Toggle Directives</span>
+    </div>
+    <div class="credit-col">
+      <a class="footer-link" href="about.html">About</a>
+      <span class="credit-sep">·</span>
+      <span>Made by <a class="footer-link" href="https://nofuss.co.za/" target="_blank" rel="noopener"> Ewald Horn from NoFuss Solutions</a></span>
+      <span class="credit-sep">·</span>
+      <a class="footer-link" href="https://nofuss.co.za/toys/" target="_blank" rel="noopener">More Toys</a>
     </div>
   </footer>
 
