@@ -12,6 +12,8 @@ old loops.
 
 Play it in your browser: [WarTech](https://ewaldhorn.github.io/wartech/)
 
+Made by [Ewald Horn](https://nofuss.co.za/) — check out my other [toys](https://nofuss.co.za/toys/).
+
 ![WarTech Screenshot](wartech.png)
 
 ## Why this is
@@ -220,3 +222,5 @@ in turn, should update the game version in the `index.html` file upon load succe
 ## Have fun
 
 Thanks for reading, hope you have fun building your own Java stuff!
+
+---
