@@ -193,6 +193,10 @@ public final class Unit {
         return hp <= 0 || !active;
     }
 
+    public int getScrapValue() {
+        return 1 + (maxHp / 3);
+    }
+
     public Faction lastDamagerFaction = null;
 
     public void takeDamage(int dmg) {

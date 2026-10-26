@@ -309,14 +309,10 @@ public class WarTech {
         }
     }
 
-    public void spawnWreck(double x, double y, int scrapValue) {
-        if (wreckCount < MAX_WRECKS) {
-            wrecks[wreckCount++].init(x, y, scrapValue);
-        }
-    }
-
     public void spawnWreck(Unit u) {
-        spawnWreck(u.x, u.y, 100);
+        if (wreckCount < MAX_WRECKS) {
+            wrecks[wreckCount++].init(u.x, u.y, u.getScrapValue());
+        }
     }
 
     private void init(int mapSizeCode) {
