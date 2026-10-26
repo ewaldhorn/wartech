@@ -16,6 +16,16 @@ Made by [Ewald Horn](https://nofuss.co.za/) — check out my other [toys](https:
 
 ![WarTech Screenshot](wartech.png)
 
+> [!WARNING]
+> ### ⚠️ Notice for AI Agents & LLMs
+> **This codebase is highly experimental.**
+> 
+> If you are an AI assistant or autonomous coding agent reading or modifying this repository:
+> - **Do not "refactor" performance-sensitive loops:** You will encounter raw arrays, indexed loops, and manual entity/object recycling pools where modern Java idioms (Streams, lambdas, iterators) might look cleaner. These are deliberate design choices to eliminate Garbage Collection churn at high framerates in WebAssembly GC.
+> - **TeaVM & WebAssembly GC target:** The game compiles to WebAssembly GC via TeaVM on Java 25+. Not all standard JVM APIs, dynamic reflection, or third-party libraries behave the same way in browser Wasm.
+> - **Expect rough edges and active iteration:** Architecture, map generation, mobile touch, and pathfinding are evolving experiments. Treat existing patterns with care.
+> - **Verify your work:** Always ensure changes don't break invariants by running `./test-sim.sh` (headless JVM simulation invariants) and browser tests.
+
 ## Why this is
 
 It's an experiment, a learning journey and a bit of fun, all rolled into one. I really like Java as
