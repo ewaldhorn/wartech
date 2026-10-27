@@ -220,10 +220,11 @@ public final class UnitNavigation {
     }
 
     public static boolean computePath(Unit u, GameMap map, int goalTX, int goalTY, Building ignoredBuilding) {
-        u.pathLen = 0;
-        u.pathIdx = 0;
-        u.pathGoalTX = goalTX;
-        u.pathGoalTY = goalTY;
+        NavigationState nav = u.nav;
+        nav.pathLen = 0;
+        nav.pathIdx = 0;
+        nav.pathGoalTX = goalTX;
+        nav.pathGoalTY = goalTY;
         int w = map.width;
         int h = map.height;
         if (goalTX < 0 || goalTY < 0 || goalTX >= w || goalTY >= h) return false;
@@ -269,6 +270,7 @@ public final class UnitNavigation {
     }
 
     private static boolean bfsRoute(Unit u, GameMap map, int sx, int sy, int gx, int gy, boolean avoidSqueeze, Building ignoredBuilding) {
+        NavigationState nav = u.nav;
         int w = map.width;
         int h = map.height;
         bfsStamp++;
@@ -315,27 +317,28 @@ public final class UnitNavigation {
         if (!found) return false;
         int len = 0;
         int cur = goal;
-        while (cur != start && cur != -1 && len < Unit.MAX_PATH_TILES) {
-            u.pathTX[len] = cur % w;
-            u.pathTY[len] = cur / w;
+        while (cur != start && cur != -1 && len < NavigationState.MAX_PATH_TILES) {
+            nav.pathTX[len] = cur % w;
+            nav.pathTY[len] = cur / w;
             len++;
             cur = bfsPrev[cur];
         }
         if (cur != start) return false;
         for (int i = 0; i < len / 2; i++) {
-            int ttx = u.pathTX[i];
-            int tty = u.pathTY[i];
-            u.pathTX[i] = u.pathTX[len - 1 - i];
-            u.pathTY[i] = u.pathTY[len - 1 - i];
-            u.pathTX[len - 1 - i] = ttx;
-            u.pathTY[len - 1 - i] = tty;
+            int ttx = nav.pathTX[i];
+            int tty = nav.pathTY[i];
+            nav.pathTX[i] = nav.pathTX[len - 1 - i];
+            nav.pathTY[i] = nav.pathTY[len - 1 - i];
+            nav.pathTX[len - 1 - i] = ttx;
+            nav.pathTY[len - 1 - i] = tty;
         }
-        u.pathLen = len;
-        u.pathIdx = 0;
+        nav.pathLen = len;
+        nav.pathIdx = 0;
         return true;
     }
 
     public static void startDetour(Unit u, double gx, double gy, GameMap map) {
+        NavigationState nav = u.nav;
         double hx = gx - u.x;
         double hy = gy - u.y;
         double hl = Math.sqrt(hx * hx + hy * hy);
@@ -354,24 +357,24 @@ public final class UnitNavigation {
             return;
         }
         if (aBlocked) {
-            u.detourX = bx;
-            u.detourY = by;
+            nav.detourX = bx;
+            nav.detourY = by;
         } else if (bBlocked) {
-            u.detourX = ax;
-            u.detourY = ay;
+            nav.detourX = ax;
+            nav.detourY = ay;
         } else {
-            u.detourSide = -u.detourSide;
-            if (u.detourSide > 0) {
-                u.detourX = ax;
-                u.detourY = ay;
+            nav.detourSide = -nav.detourSide;
+            if (nav.detourSide > 0) {
+                nav.detourX = ax;
+                nav.detourY = ay;
             } else {
-                u.detourX = bx;
-                u.detourY = by;
+                nav.detourX = bx;
+                nav.detourY = by;
             }
         }
-        u.detourTimer = Unit.DETOUR_SECONDS;
-        u.slideSide = 0;
-        u.slideLockTimer = 0.0;
+        nav.detourTimer = NavigationState.DETOUR_SECONDS;
+        nav.slideSide = 0;
+        nav.slideLockTimer = 0.0;
     }
 
     public static final double TRAFFIC_CONTACT_SLOP = 14.0;
@@ -389,23 +392,24 @@ public final class UnitNavigation {
 
         for (int i = 0; i < unitCount; i++) {
             Unit u = units[i];
-            if (u == null || u.isDestroyed() || !u.yielding) continue;
-            u.yieldTimer -= dt;
-            double rdx = u.yieldRetreatX - u.x;
-            double rdy = u.yieldRetreatY - u.y;
+            if (u == null || u.isDestroyed() || !u.isYielding()) continue;
+            NavigationState nav = u.nav;
+            nav.yieldTimer -= dt;
+            double rdx = nav.yieldRetreatX - u.x;
+            double rdy = nav.yieldRetreatY - u.y;
             if (rdx * rdx + rdy * rdy <= 1600.0) {
                 u.moving = false;
-                if (u.yieldTimer <= 0.0 || laneAheadClear(u, units, unitCount)) {
+                if (nav.yieldTimer <= 0.0 || laneAheadClear(u, units, unitCount)) {
                     u.endYield();
                 }
-            } else if (u.yieldTimer <= 0.0) {
+            } else if (nav.yieldTimer <= 0.0) {
                 u.endYield();
             }
         }
 
         for (int i = 0; i < unitCount; i++) {
             Unit u = units[i];
-            if (u == null || u.isDestroyed() || u.yielding || !u.moving) continue;
+            if (u == null || u.isDestroyed() || u.isYielding() || !u.moving) continue;
             if (grid != null) {
                 int cx = grid.getCellX(u.x);
                 int cy = grid.getCellY(u.y);
@@ -437,7 +441,7 @@ public final class UnitNavigation {
     }
 
     private static void checkCorridorTraffic(Unit u, Unit v, GameMap map) {
-        if (v == null || v.isDestroyed() || v.yielding || !v.moving) return;
+        if (v == null || v.isDestroyed() || v.isYielding() || !v.moving) return;
         if (v.faction != u.faction) return;
 
         double dx = u.x - v.x;
@@ -487,8 +491,9 @@ public final class UnitNavigation {
     }
 
     private static boolean laneAheadClear(Unit u, Unit[] units, int unitCount) {
-        double dx = u.yieldResumeX - u.x;
-        double dy = u.yieldResumeY - u.y;
+        NavigationState nav = u.nav;
+        double dx = nav.yieldResumeX - u.x;
+        double dy = nav.yieldResumeY - u.y;
         double len = Math.sqrt(dx * dx + dy * dy);
         if (len < 1.0) return true;
         dx /= len;
@@ -496,7 +501,7 @@ public final class UnitNavigation {
         for (int i = 0; i < unitCount; i++) {
             Unit o = units[i];
             if (o == null || o == u || o.isDestroyed() || o.faction != u.faction) continue;
-            if (!o.moving && !o.yielding) continue;
+            if (!o.moving && !o.isYielding()) continue;
             double ox = o.x - u.x;
             double oy = o.y - u.y;
             double od = Math.sqrt(ox * ox + oy * oy);
@@ -507,12 +512,13 @@ public final class UnitNavigation {
     }
 
     public static void updateUnitMovement(Unit u, double dt, GameMap map) {
+        NavigationState nav = u.nav;
         double destX = u.targetX;
         double destY = u.targetY;
         double aimX = u.getAimX();
         double aimY = u.getAimY();
 
-        if ((u.attackTargetUnit != null || u.attackTargetBuilding != null) && !u.yielding) {
+        if ((u.attackTargetUnit != null || u.attackTargetBuilding != null) && !u.isYielding()) {
             if (u.stance == Stance.GUARD) {
                 double anchorDistSq = (u.guardAnchorX - u.x) * (u.guardAnchorX - u.x) + (u.guardAnchorY - u.y) * (u.guardAnchorY - u.y);
                 if (anchorDistSq <= 114.0) {
@@ -551,84 +557,84 @@ public final class UnitNavigation {
                     destY = aimY;
                 }
             }
-        } else if (u.repairTargetUnit != null && !u.yielding) {
+        } else if (u.repairer != null && u.repairer.repairTargetUnit != null && !u.isYielding()) {
             double dist = Math.sqrt((aimX - u.x) * (aimX - u.x) + (aimY - u.y) * (aimY - u.y));
-            if (dist <= Unit.REPAIR_UNIT_RANGE) {
+            if (dist <= RepairRole.REPAIR_UNIT_RANGE) {
                 destX = u.x;
                 destY = u.y;
                 u.moving = false;
-                u.isRepairing = true;
+                u.repairer.isRepairing = true;
             } else {
                 destX = aimX;
                 destY = aimY;
-                u.isRepairing = false;
+                u.repairer.isRepairing = false;
             }
-        } else if (u.repairTargetBuilding != null && !u.yielding) {
-            double minBx = (double) u.repairTargetBuilding.pixelX;
-            double maxBx = (double) (u.repairTargetBuilding.pixelX + u.repairTargetBuilding.type.widthTiles * GameMap.TILE_SIZE);
-            double minBy = (double) u.repairTargetBuilding.pixelY;
-            double maxBy = (double) (u.repairTargetBuilding.pixelY + u.repairTargetBuilding.type.heightTiles * GameMap.TILE_SIZE);
+        } else if (u.repairer != null && u.repairer.repairTargetBuilding != null && !u.isYielding()) {
+            double minBx = (double) u.repairer.repairTargetBuilding.pixelX;
+            double maxBx = (double) (u.repairer.repairTargetBuilding.pixelX + u.repairer.repairTargetBuilding.type.widthTiles * GameMap.TILE_SIZE);
+            double minBy = (double) u.repairer.repairTargetBuilding.pixelY;
+            double maxBy = (double) (u.repairer.repairTargetBuilding.pixelY + u.repairer.repairTargetBuilding.type.heightTiles * GameMap.TILE_SIZE);
             double bx = Math.clamp(u.x, minBx, maxBx);
             double by = Math.clamp(u.y, minBy, maxBy);
             double dist = Math.sqrt((bx - u.x) * (bx - u.x) + (by - u.y) * (by - u.y));
-            if (dist <= Unit.REPAIR_BUILDING_RANGE) {
+            if (dist <= RepairRole.REPAIR_BUILDING_RANGE) {
                 destX = u.x;
                 destY = u.y;
                 u.moving = false;
-                u.isRepairing = true;
+                u.repairer.isRepairing = true;
             } else {
                 destX = aimX;
                 destY = aimY;
-                u.isRepairing = false;
+                u.repairer.isRepairing = false;
             }
         }
 
-        Building ignoredBuilding = (u.repairTargetBuilding != null) ? u.repairTargetBuilding : null;
+        Building ignoredBuilding = (u.repairer != null && u.repairer.repairTargetBuilding != null) ? u.repairer.repairTargetBuilding : null;
 
-        if (u.yielding) {
-            destX = u.yieldRetreatX;
-            destY = u.yieldRetreatY;
+        if (u.isYielding()) {
+            destX = nav.yieldRetreatX;
+            destY = nav.yieldRetreatY;
         }
 
         int destTX = (int) (destX / GameMap.TILE_SIZE);
         int destTY = (int) (destY / GameMap.TILE_SIZE);
-        boolean mapChanged = u.pathVersion != map.version;
-        if (destTX != u.pathGoalTX || destTY != u.pathGoalTY || mapChanged) {
+        boolean mapChanged = nav.pathVersion != map.version;
+        if (destTX != nav.pathGoalTX || destTY != nav.pathGoalTY || mapChanged) {
             boolean highPriority = u.attackTargetUnit != null || u.attackTargetBuilding != null ||
-                                   u.threatTimer > 0.0 || u.retreatingToRepair || u.yielding;
+                                   u.threatTimer > 0.0 || u.retreatingToRepair || u.isYielding();
             if (takePathBudget(highPriority)) {
                 boolean routed = computePath(u, map, destTX, destTY, ignoredBuilding);
-                u.pathVersion = map.version;
+                nav.pathVersion = map.version;
                 if (!routed && u.attackTargetUnit == null && u.attackTargetBuilding == null) {
                     u.moving = false;
                 }
             } else {
-                u.pathLen = 0;
-                u.pathIdx = 0;
+                nav.pathLen = 0;
+                nav.pathIdx = 0;
             }
         }
-        if (u.pathLen > 0 && u.pathIdx < u.pathLen) {
+        if (nav.pathLen > 0 && nav.pathIdx < nav.pathLen) {
             int targetIdx = -1;
-            while (u.pathIdx < u.pathLen) {
-                double wx = (u.pathTX[u.pathIdx] + 0.5) * GameMap.TILE_SIZE;
-                double wy = (u.pathTY[u.pathIdx] + 0.5) * GameMap.TILE_SIZE;
+            while (nav.pathIdx < nav.pathLen) {
+                double wx = (nav.pathTX[nav.pathIdx] + 0.5) * GameMap.TILE_SIZE;
+                double wy = (nav.pathTY[nav.pathIdx] + 0.5) * GameMap.TILE_SIZE;
                 double wdx = wx - u.x;
                 double wdy = wy - u.y;
                 double wdistSq = wdx * wdx + wdy * wdy;
                 if (wdistSq <= 1156.0) {
-                    u.pathIdx++;
+                    nav.pathIdx++;
                 } else if (wdistSq >= 2304.0) {
-                    targetIdx = u.pathIdx;
+                    targetIdx = nav.pathIdx;
                     break;
                 } else {
-                    u.pathIdx++;
+                    nav.pathIdx++;
                 }
             }
             if (targetIdx >= 0) {
-                destX = (u.pathTX[targetIdx] + 0.5) * GameMap.TILE_SIZE;
-                destY = (u.pathTY[targetIdx] + 0.5) * GameMap.TILE_SIZE;
-            } else if (u.pathIdx >= u.pathLen) {
-                u.pathLen = 0;
+                destX = (nav.pathTX[targetIdx] + 0.5) * GameMap.TILE_SIZE;
+                destY = (nav.pathTY[targetIdx] + 0.5) * GameMap.TILE_SIZE;
+            } else if (nav.pathIdx >= nav.pathLen) {
+                nav.pathLen = 0;
                 int otx = (int) (u.targetX / GameMap.TILE_SIZE);
                 int oty = (int) (u.targetY / GameMap.TILE_SIZE);
                 if (map.isTileBlocked(otx, oty, ignoredBuilding)) {
@@ -638,32 +644,30 @@ public final class UnitNavigation {
             }
         }
 
-        if (u.detourTimer > 0.0) {
-            u.detourTimer -= dt;
-            if (u.detourTimer <= 0.0) {
-                u.detourTimer = 0.0;
-                u.pathLen = 0;
-                u.pathGoalTX = -9999;
-                u.pathGoalTY = -9999;
+        if (nav.detourTimer > 0.0) {
+            nav.detourTimer -= dt;
+            if (nav.detourTimer <= 0.0) {
+                nav.detourTimer = 0.0;
+                nav.clearPath();
             }
-            destX = u.detourX;
-            destY = u.detourY;
+            destX = nav.detourX;
+            destY = nav.detourY;
         } else {
-            u.stuckCheckTimer += dt;
-            if (u.stuckCheckTimer >= Unit.STUCK_CHECK_SECONDS) {
-                u.stuckCheckTimer = 0.0;
-                double psx = u.x - u.stuckCheckX;
-                double psy = u.y - u.stuckCheckY;
-                u.stuckCheckX = u.x;
-                u.stuckCheckY = u.y;
+            nav.stuckCheckTimer += dt;
+            if (nav.stuckCheckTimer >= NavigationState.STUCK_CHECK_SECONDS) {
+                nav.stuckCheckTimer = 0.0;
+                double psx = u.x - nav.stuckCheckX;
+                double psy = u.y - nav.stuckCheckY;
+                nav.stuckCheckX = u.x;
+                nav.stuckCheckY = u.y;
                 if (psx * psx + psy * psy < 256.0) {
-                    u.stuckCount++;
-                    if (u.stuckCount >= 2) {
-                        u.stuckCount = 0;
+                    nav.stuckCount++;
+                    if (nav.stuckCount >= 2) {
+                        nav.stuckCount = 0;
                         startDetour(u, destX, destY, map);
                     }
                 } else {
-                    u.stuckCount = 0;
+                    nav.stuckCount = 0;
                 }
             }
         }
@@ -710,8 +714,8 @@ public final class UnitNavigation {
                 u.x = nextX;
                 u.y = nextY;
                 u.angle = testAngle;
-                u.slideSide = 0;
-                u.slideLockTimer = 0.0;
+                nav.slideSide = 0;
+                nav.slideLockTimer = 0.0;
             } else {
                 boolean moved = false;
                 sharedContact.reset();
@@ -730,21 +734,21 @@ public final class UnitNavigation {
 
                         double dot1 = t1x * dirX + t1y * dirY;
                         double dot2 = t2x * dirX + t2y * dirY;
-                        if (u.slideLockTimer > 0.0 && u.slideSide != 0) {
-                            double lockedDot = (u.slideSide == 1) ? dot1 : dot2;
-                            double otherDot = (u.slideSide == 1) ? dot2 : dot1;
+                        if (nav.slideLockTimer > 0.0 && nav.slideSide != 0) {
+                            double lockedDot = (nav.slideSide == 1) ? dot1 : dot2;
+                            double otherDot = (nav.slideSide == 1) ? dot2 : dot1;
                             if (otherDot > lockedDot + 0.45) {
-                                u.slideSide = -u.slideSide;
-                                u.slideLockTimer = Unit.SLIDE_LOCK_SECONDS;
+                                nav.slideSide = -nav.slideSide;
+                                nav.slideLockTimer = NavigationState.SLIDE_LOCK_SECONDS;
                             } else {
-                                u.slideLockTimer -= dt;
+                                nav.slideLockTimer -= dt;
                             }
                         } else {
-                            u.slideSide = (dot1 >= dot2) ? 1 : -1;
-                            u.slideLockTimer = Unit.SLIDE_LOCK_SECONDS;
+                            nav.slideSide = (dot1 >= dot2) ? 1 : -1;
+                            nav.slideLockTimer = NavigationState.SLIDE_LOCK_SECONDS;
                         }
-                        double bestTx = (u.slideSide == 1) ? t1x : t2x;
-                        double bestTy = (u.slideSide == 1) ? t1y : t2y;
+                        double bestTx = (nav.slideSide == 1) ? t1x : t2x;
+                        double bestTy = (nav.slideSide == 1) ? t1y : t2y;
 
                         double sx = bestTx * 0.88 + nx * 0.24;
                         double sy = bestTy * 0.88 + ny * 0.24;
@@ -793,11 +797,9 @@ public final class UnitNavigation {
 
                 if (!moved) {
                     if (distSq <= (clearance + 14.0) * (clearance + 14.0) || distSq <= 114.0) {
-                        if (u.detourTimer > 0.0) {
-                            u.detourTimer = 0.0;
-                            u.pathLen = 0;
-                            u.pathGoalTX = -9999;
-                            u.pathGoalTY = -9999;
+                        if (nav.detourTimer > 0.0) {
+                            nav.detourTimer = 0.0;
+                            nav.clearPath();
                         } else {
                             u.moving = false;
                             u.returningToHuntStation = false;
@@ -816,11 +818,9 @@ public final class UnitNavigation {
                                 double nearY = Math.clamp(u.y, bMinY, bMaxY);
                                 double bDistSq = (u.x - nearX) * (u.x - nearX) + (u.y - nearY) * (u.y - nearY);
                                 if (bDistSq <= (clearance + 8.0) * (clearance + 8.0)) {
-                                    if (u.detourTimer > 0.0) {
-                                        u.detourTimer = 0.0;
-                                        u.pathLen = 0;
-                                        u.pathGoalTX = -9999;
-                                        u.pathGoalTY = -9999;
+                                    if (nav.detourTimer > 0.0) {
+                                        nav.detourTimer = 0.0;
+                                        nav.clearPath();
                                     } else {
                                         u.moving = false;
                                         u.returningToHuntStation = false;
@@ -834,11 +834,9 @@ public final class UnitNavigation {
                 resolveObstacleOverlap(u, map, clearance, ignoredBuilding);
             }
         } else {
-            if (u.detourTimer > 0.0) {
-                u.detourTimer = 0.0;
-                u.pathLen = 0;
-                u.pathGoalTX = -9999;
-                u.pathGoalTY = -9999;
+            if (nav.detourTimer > 0.0) {
+                nav.detourTimer = 0.0;
+                nav.clearPath();
             } else {
                 u.moving = false;
                 u.returningToHuntStation = false;

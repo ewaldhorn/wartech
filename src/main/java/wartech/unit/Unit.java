@@ -1,10 +1,9 @@
 package wartech.unit;
 
-// Mobile unit entity with a basic state machines, stances and lifecycle 
+// Mobile unit entity with a basic state machines, stances and lifecycle
 // All angles are in radians
 
 import wartech.building.Building;
-import wartech.combat.Wreckage;
 import wartech.core.Faction;
 import wartech.map.GameMap;
 
@@ -17,8 +16,8 @@ public final class Unit {
 
     public double x;
     public double y;
-    public double angle;        
-    public double turretAngle;  
+    public double angle;
+    public double turretAngle;
 
     public int hp;
     public final int maxHp;
@@ -56,80 +55,46 @@ public final class Unit {
     public boolean hasHuntStation = false;
     public boolean returningToHuntStation = false;
     public boolean isBaseDefender = false;
+    public boolean retreatingToRepair = false;
+    public int retreatRetries = 0;
+
+    public boolean isRepairing() {
+        return repairer != null && repairer.isRepairing;
+    }
 
     public double targetX;
     public double targetY;
     public boolean moving = false;
 
-    public static final double SLIDE_LOCK_SECONDS = 40.0 / 60.0;
-    public static final double STUCK_CHECK_SECONDS = 45.0 / 60.0;
-    public static final double DETOUR_SECONDS = 110.0 / 60.0;
+    public final NavigationState nav = new NavigationState();
 
-    public boolean yielding = false;
-    public double yieldTimer = 0.0;
-    public double yieldResumeX = 0.0;
-    public double yieldResumeY = 0.0;
-    public double yieldRetreatX = 0.0;
-    public double yieldRetreatY = 0.0;
-    public int slideSide = 0;
-    public double slideLockTimer = 0.0;
-    public double stuckCheckX = 0.0;
-    public double stuckCheckY = 0.0;
-    public double stuckCheckTimer = 0.0;
-    public int stuckCount = 0;
-    public double detourX = 0.0;
-    public double detourY = 0.0;
-    public double detourTimer = 0.0;
-    public int detourSide = 1;
-
-    public static final int MAX_PATH_TILES = 512;
-    public int pathLen = 0;
-    public int pathIdx = 0;
-    public int pathGoalTX = -9999;
-    public int pathGoalTY = -9999;
-    public int pathVersion = -1;
-    public final int[] pathTX = new int[MAX_PATH_TILES];
-    public final int[] pathTY = new int[MAX_PATH_TILES];
+    public boolean isYielding() {
+        return nav.yielding;
+    }
 
     public Unit attackTargetUnit = null;
     public Building attackTargetBuilding = null;
     public double reloadCooldown = 0.0;
     public double threatTimer = 0.0;
 
-    public int crystalLoad = 0;
-    public static final int MAX_LOAD = 300;
-    public static final int HARVEST_YIELD = 30;
-    public static final double HARVEST_RETRY_INTERVAL = 0.5;
-    public double harvestTimer = 0.0;
-    public boolean returningToRefinery = false;
-    public boolean autoCollect = true;
-    public double harvestTargetX = -1.0;
-    public double harvestTargetY = -1.0;
-    public double harvestRetryTimer = 0.0;
+    public final HarvesterRole harvester;
+    public final ScavengerRole scavenger;
+    public final RepairRole repairer;
 
-    public int scrapCarried = 0;
-    public static final int MAX_SCRAP = 100;
-    public Wreckage salvageTarget = null;
-    public int salvageTargetId = 0;
-    public double salvageTimer = 0.0;
-    public boolean returningScrap = false;
+    public boolean isHarvester() {
+        return harvester != null;
+    }
 
-    public Unit repairTargetUnit = null;
-    public Building repairTargetBuilding = null;
-    public double repairCreditAccumulator = 0.0;
-    public boolean isRepairing = false;
-    public boolean retreatingToRepair = false;
-    public int retreatRetries = 0;
-    public boolean autoRepair = true;
-    public boolean autoRepairJob = false;
+    public boolean isScavenger() {
+        return scavenger != null;
+    }
 
-    public static final double MECHANIC_LEASH_RANGE = 256.0;
-    public static final double REPAIR_UNIT_RANGE = 54.0;
-    public static final double REPAIR_BUILDING_RANGE = 44.0;
+    public boolean isRepairer() {
+        return repairer != null;
+    }
 
     public double regenTimer = 0.0;
     public double healTimer = 0.0;
-    public double repairHpCarry = 0.0;
 
     public Unit(UnitType type, Faction faction, double x, double y) {
         this.id = nextId++;
@@ -143,6 +108,9 @@ public final class Unit {
         this.turretAngle = 0.0;
         this.maxHp = type.maxHp;
         this.hp = type.maxHp;
+        this.harvester = (type == UnitType.COLLECTOR) ? new HarvesterRole() : null;
+        this.scavenger = (type == UnitType.SCAVENGER_DRONE) ? new ScavengerRole() : null;
+        this.repairer = (type == UnitType.MECHANIC) ? new RepairRole() : null;
         if (type.isMilitary()) {
             this.stance = Stance.GUARD;
             this.guardAnchorX = x;
@@ -152,40 +120,17 @@ public final class Unit {
     }
 
     public void resetNavState() {
-        slideSide = 0;
-        slideLockTimer = 0.0;
-        stuckCheckX = x;
-        stuckCheckY = y;
-        stuckCheckTimer = 0.0;
-        stuckCount = 0;
-        detourTimer = 0.0;
-        pathLen = 0;
-        pathIdx = 0;
-        pathGoalTX = -9999;
-        pathGoalTY = -9999;
-        pathVersion = -1;
-        yielding = false;
-        yieldTimer = 0.0;
+        nav.reset(x, y);
     }
 
     public void beginYield(double retreatX, double retreatY, double seconds) {
-        if (!yielding) {
-            yieldResumeX = targetX;
-            yieldResumeY = targetY;
-        }
-        resetNavState();
-        yielding = true;
-        yieldTimer = seconds;
-        yieldRetreatX = retreatX;
-        yieldRetreatY = retreatY;
+        nav.beginYield(retreatX, retreatY, seconds, targetX, targetY);
         moving = true;
     }
 
     public void endYield() {
-        if (!yielding) return;
-        yielding = false;
-        yieldTimer = 0.0;
-        resetNavState();
+        if (!nav.yielding) return;
+        nav.endYield(x, y);
         moving = true;
     }
 
@@ -223,10 +168,9 @@ public final class Unit {
         this.moving = true;
         this.attackTargetUnit = null;
         this.attackTargetBuilding = null;
-        this.repairTargetUnit = null;
-        this.repairTargetBuilding = null;
-        this.isRepairing = false;
-        this.autoRepairJob = false;
+        if (repairer != null) {
+            repairer.clearTarget();
+        }
         resetNavState();
     }
 
@@ -234,28 +178,28 @@ public final class Unit {
         this.moving = false;
         this.attackTargetUnit = null;
         this.attackTargetBuilding = null;
-        this.autoCollect = false;
-        this.returningToRefinery = false;
         this.hasHuntWaypoint = false;
         this.hasHuntStation = false;
         this.returningToHuntStation = false;
         this.guardAnchorX = this.x;
         this.guardAnchorY = this.y;
-        this.repairTargetUnit = null;
-        this.repairTargetBuilding = null;
-        this.isRepairing = false;
-        this.autoRepair = false;
-        this.autoRepairJob = false;
+
+        // I had a switch here but realised I have some units planned that might have multiple roles,
+        // like the mobile repair station I'm working on that can gather scrap and repair stuff.
+        // So for now I'm leaving it as three if's and will revisit it sometime later.
+        if (harvester != null) harvester.reset();
+        if (scavenger != null) scavenger.reset();
+        if (repairer != null) repairer.reset();
+
         resetNavState();
     }
 
     public void attackUnit(Unit target) {
         this.attackTargetUnit = target;
         this.attackTargetBuilding = null;
-        this.repairTargetUnit = null;
-        this.repairTargetBuilding = null;
-        this.isRepairing = false;
-        this.autoRepairJob = false;
+        if (repairer != null) {
+            repairer.clearTarget();
+        }
         this.returningToHuntStation = false;
         if (stance != Stance.GUARD) {
             this.moving = true;
@@ -266,10 +210,9 @@ public final class Unit {
     public void attackBuilding(Building target) {
         this.attackTargetBuilding = target;
         this.attackTargetUnit = null;
-        this.repairTargetUnit = null;
-        this.repairTargetBuilding = null;
-        this.isRepairing = false;
-        this.autoRepairJob = false;
+        if (repairer != null) {
+            repairer.clearTarget();
+        }
         this.returningToHuntStation = false;
         if (stance != Stance.GUARD) {
             this.moving = true;
@@ -278,44 +221,52 @@ public final class Unit {
     }
 
     public void repairUnit(Unit target) {
-        this.repairTargetUnit = target;
-        this.repairTargetBuilding = null;
+        if (repairer != null) {
+            repairer.repairTargetUnit = target;
+            repairer.repairTargetBuilding = null;
+            repairer.isRepairing = false;
+            repairer.autoRepair = true;
+            repairer.autoRepairJob = false;
+            repairer.repairHpCarry = 0.0;
+        }
         this.attackTargetUnit = null;
         this.attackTargetBuilding = null;
-        this.isRepairing = false;
-        this.autoRepair = true;
-        this.autoRepairJob = false;
         this.moving = true;
-        this.repairHpCarry = 0.0;
         resetNavState();
     }
 
     public void repairBuilding(Building target) {
-        this.repairTargetBuilding = target;
-        this.repairTargetUnit = null;
+        if (repairer != null) {
+            repairer.repairTargetBuilding = target;
+            repairer.repairTargetUnit = null;
+            repairer.isRepairing = false;
+            repairer.autoRepair = true;
+            repairer.autoRepairJob = false;
+            repairer.repairHpCarry = 0.0;
+        }
         this.attackTargetUnit = null;
         this.attackTargetBuilding = null;
-        this.isRepairing = false;
-        this.autoRepair = true;
-        this.autoRepairJob = false;
         this.moving = true;
-        this.repairHpCarry = 0.0;
         resetNavState();
     }
 
     public double getAimX() {
         if (attackTargetUnit != null) return attackTargetUnit.x;
         if (attackTargetBuilding != null) return attackTargetBuilding.getCenterX();
-        if (repairTargetUnit != null) return repairTargetUnit.x;
-        if (repairTargetBuilding != null) return repairTargetBuilding.getCenterX();
+        if (repairer != null) {
+            if (repairer.repairTargetUnit != null) return repairer.repairTargetUnit.x;
+            if (repairer.repairTargetBuilding != null) return repairer.repairTargetBuilding.getCenterX();
+        }
         return targetX;
     }
 
     public double getAimY() {
         if (attackTargetUnit != null) return attackTargetUnit.y;
         if (attackTargetBuilding != null) return attackTargetBuilding.getCenterY();
-        if (repairTargetUnit != null) return repairTargetUnit.y;
-        if (repairTargetBuilding != null) return repairTargetBuilding.getCenterY();
+        if (repairer != null) {
+            if (repairer.repairTargetUnit != null) return repairer.repairTargetUnit.y;
+            if (repairer.repairTargetBuilding != null) return repairer.repairTargetBuilding.getCenterY();
+        }
         return targetY;
     }
 
@@ -379,13 +330,15 @@ public final class Unit {
                 resetNavState();
             }
         }
-        if (repairTargetUnit != null && (repairTargetUnit.isDestroyed() || repairTargetUnit.hp >= repairTargetUnit.maxHp)) {
-            repairTargetUnit = null;
-            isRepairing = false;
-        }
-        if (repairTargetBuilding != null && (repairTargetBuilding.isDestroyed() || repairTargetBuilding.hp >= repairTargetBuilding.maxHp)) {
-            repairTargetBuilding = null;
-            isRepairing = false;
+        if (repairer != null) {
+            if (repairer.repairTargetUnit != null && (repairer.repairTargetUnit.isDestroyed() || repairer.repairTargetUnit.hp >= repairer.repairTargetUnit.maxHp)) {
+                repairer.repairTargetUnit = null;
+                repairer.isRepairing = false;
+            }
+            if (repairer.repairTargetBuilding != null && (repairer.repairTargetBuilding.isDestroyed() || repairer.repairTargetBuilding.hp >= repairer.repairTargetBuilding.maxHp)) {
+                repairer.repairTargetBuilding = null;
+                repairer.isRepairing = false;
+            }
         }
     }
 
@@ -402,7 +355,7 @@ public final class Unit {
 
         if (retreatingToRepair) return;
 
-        if (yielding) {
+        if (nav.yielding) {
             boolean inContact = (attackTargetUnit != null || attackTargetBuilding != null)
                 && Math.sqrt((aimX - x) * (aimX - x) + (aimY - y) * (aimY - y)) <= type.attackRange;
             if (!inContact) return;
@@ -453,7 +406,8 @@ public final class Unit {
             }
         }
 
-        if (stance == Stance.GUARD && !moving && attackTargetUnit == null && attackTargetBuilding == null && repairTargetUnit == null && repairTargetBuilding == null) {
+        boolean hasRepairTarget = repairer != null && repairer.hasTarget();
+        if (stance == Stance.GUARD && !moving && attackTargetUnit == null && attackTargetBuilding == null && !hasRepairTarget) {
             double anchorDistSq = (guardAnchorX - x) * (guardAnchorX - x) + (guardAnchorY - y) * (guardAnchorY - y);
             if (anchorDistSq > 316.0) {
                 targetX = guardAnchorX;
@@ -481,7 +435,7 @@ public final class Unit {
 
     private void resolveIdleObstacleOverlap(GameMap map) {
         double cl = getObstacleClearance();
-        Building ignoredBuilding = (repairTargetBuilding != null) ? repairTargetBuilding : null;
+        Building ignoredBuilding = (repairer != null && repairer.repairTargetBuilding != null) ? repairer.repairTargetBuilding : null;
         if (UnitNavigation.collidesWithObstacle(x, y, cl, map, ignoredBuilding)) {
             UnitNavigation.resolveObstacleOverlap(this, map, cl, ignoredBuilding);
         }
