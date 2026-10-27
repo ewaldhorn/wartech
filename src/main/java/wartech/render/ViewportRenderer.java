@@ -962,15 +962,15 @@ public final class ViewportRenderer {
             screen.fillRect(sx - barW / 2, sy - size - 7, hpW, 2, hpCol);
         }
 
-        if (u.type == UnitType.MECHANIC && u.isRepairing && camera != null) {
+        if (u.repairer != null && u.repairer.isRepairing && camera != null) {
             int tx = -1;
             int ty = -1;
-            if (u.repairTargetUnit != null && !u.repairTargetUnit.isDestroyed()) {
-                tx = camera.worldToScreenX(u.repairTargetUnit.x);
-                ty = camera.worldToScreenY(u.repairTargetUnit.y);
-            } else if (u.repairTargetBuilding != null && !u.repairTargetBuilding.isDestroyed()) {
-                tx = camera.worldToScreenX(u.repairTargetBuilding.getCenterX());
-                ty = camera.worldToScreenY(u.repairTargetBuilding.getCenterY());
+            if (u.repairer.repairTargetUnit != null && !u.repairer.repairTargetUnit.isDestroyed()) {
+                tx = camera.worldToScreenX(u.repairer.repairTargetUnit.x);
+                ty = camera.worldToScreenY(u.repairer.repairTargetUnit.y);
+            } else if (u.repairer.repairTargetBuilding != null && !u.repairer.repairTargetBuilding.isDestroyed()) {
+                tx = camera.worldToScreenX(u.repairer.repairTargetBuilding.getCenterX());
+                ty = camera.worldToScreenY(u.repairer.repairTargetBuilding.getCenterY());
             }
             if (tx >= 0 && tx < VIEW_WIDTH && ty >= 0 && ty < SCREEN_HEIGHT) {
                 int arcCol = (((int) (time * 24.0) & 1) == 0) ? Palette.GOLD_LIGHT : Palette.WHITE;
