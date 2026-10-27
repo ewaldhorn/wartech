@@ -8,6 +8,7 @@ import wartech.core.Faction;
 import wartech.core.Surface;
 import wartech.core.WarTech;
 import wartech.map.GameMap;
+import wartech.unit.HarvesterRole;
 import wartech.unit.Stance;
 import wartech.unit.Unit;
 import wartech.unit.UnitType;
@@ -162,25 +163,29 @@ public final class DossierRenderer {
         screen.drawLine(px + 10, orderY - 4, px + pw - 10, orderY - 4, 0xFF352B20);
         switch (u.type) {
             case COLLECTOR -> {
-            int cargoPct = (int) ((double) u.crystalLoad / Unit.MAX_LOAD * 100);
-            int cX = BitmapFont.drawLine(screen, "CARGO: ", u.crystalLoad, " / ",
-                px + 12, orderY, Palette.GREEN_BRIGHT);
-            cX = BitmapFont.drawLine(screen, null, Unit.MAX_LOAD, " (", cX, orderY, Palette.GREEN_BRIGHT);
-            BitmapFont.drawLine(screen, null, cargoPct, "%)", cX, orderY, Palette.GREEN_BRIGHT);
-            screen.fillRect(px + 10, orderY + 12, barW, 7, Palette.BLACK);
-            int cW = (int) ((double) u.crystalLoad / Unit.MAX_LOAD * (barW - 2));
-            if (cW > 0) screen.fillRect(px + 11, orderY + 13, cW, 5, 0xFF00FF80);
+            if (u.harvester != null) {
+                int cargoPct = (int) ((double) u.harvester.crystalLoad / HarvesterRole.MAX_LOAD * 100);
+                int cX = BitmapFont.drawLine(screen, "CARGO: ", u.harvester.crystalLoad, " / ",
+                    px + 12, orderY, Palette.GREEN_BRIGHT);
+                cX = BitmapFont.drawLine(screen, null, HarvesterRole.MAX_LOAD, " (", cX, orderY, Palette.GREEN_BRIGHT);
+                BitmapFont.drawLine(screen, null, cargoPct, "%)", cX, orderY, Palette.GREEN_BRIGHT);
+                screen.fillRect(px + 10, orderY + 12, barW, 7, Palette.BLACK);
+                int cW = (int) ((double) u.harvester.crystalLoad / HarvesterRole.MAX_LOAD * (barW - 2));
+                if (cW > 0) screen.fillRect(px + 11, orderY + 13, cW, 5, 0xFF00FF80);
 
-            String hStatus = u.returningToRefinery ? "RETURNING TO BASE" : (u.crystalLoad > 0 && !u.moving ? "MINING CRYSTALS" : (u.moving ? (u.autoCollect ? "HEADING TO CRYSTALS" : "EN ROUTE") : (u.autoCollect ? "SEEKING CRYSTALS" : "IDLE")));
-            BitmapFont.drawText(screen, "STATUS: ", px + 12, orderY + 24, Palette.GOLD, 1);
-            BitmapFont.drawText(screen, hStatus, px + 12 + BitmapFont.getTextWidth("STATUS: "), orderY + 24, Palette.GOLD, 1);
+                String hStatus = u.harvester.returningToRefinery ? "RETURNING TO BASE" : (u.harvester.crystalLoad > 0 && !u.moving ? "MINING CRYSTALS" : (u.moving ? (u.harvester.autoCollect ? "HEADING TO CRYSTALS" : "EN ROUTE") : (u.harvester.autoCollect ? "SEEKING CRYSTALS" : "IDLE")));
+                BitmapFont.drawText(screen, "STATUS: ", px + 12, orderY + 24, Palette.GOLD, 1);
+                BitmapFont.drawText(screen, hStatus, px + 12 + BitmapFont.getTextWidth("STATUS: "), orderY + 24, Palette.GOLD, 1);
+            }
             }
             case MECHANIC -> {
-            String mStatus = u.isRepairing ? "REPAIRING [1 CR/10 HP]" : (u.moving ? "EN ROUTE TO TARGET" : (u.autoRepair ? "ROAMING / SCANNING BASE" : "STANDBY"));
+            boolean isRep = u.repairer != null && u.repairer.isRepairing;
+            boolean autoRep = u.repairer != null && u.repairer.autoRepair;
+            String mStatus = isRep ? "REPAIRING [1 CR/10 HP]" : (u.moving ? "EN ROUTE TO TARGET" : (autoRep ? "ROAMING / SCANNING BASE" : "STANDBY"));
             BitmapFont.drawText(screen, "STATUS: ", px + 12, orderY, Palette.GREEN, 1);
             BitmapFont.drawText(screen, mStatus, px + 12 + BitmapFont.getTextWidth("STATUS: "), orderY, Palette.GREEN, 1);
-            String autoStr = (u.autoRepair ? "AUTO-REPAIR: ENABLED (ROAMING)" : "AUTO-REPAIR: OFF");
-            BitmapFont.drawText(screen, autoStr, px + 12, orderY + 14, u.autoRepair ? Palette.GOLD : Palette.GRAY, 1);
+            String autoStr = (autoRep ? "AUTO-REPAIR: ENABLED (ROAMING)" : "AUTO-REPAIR: OFF");
+            BitmapFont.drawText(screen, autoStr, px + 12, orderY + 14, autoRep ? Palette.GOLD : Palette.GRAY, 1);
             }
             case MEDIC -> {
             BitmapFont.drawText(screen, "STATUS: FIELD MEDIC AURA", px + 12, orderY, Palette.GREEN, 1);
@@ -224,8 +229,9 @@ public final class DossierRenderer {
             int btnY = py + 212; // 710
             screen.drawLine(px + 10, btnY - 5, px + pw - 10, btnY - 5, 0xFF352B20);
 
+            boolean hasRepairTarget = u.repairer != null && u.repairer.hasTarget();
             boolean hStop = (game.mouseX >= INSPECTOR_BTN1_X0 && game.mouseX < INSPECTOR_BTN1_X1 && game.mouseY >= btnY && game.mouseY < btnY + 44);
-            boolean isStopped = (u.stance == Stance.DEFAULT && !u.moving && u.attackTargetUnit == null && u.attackTargetBuilding == null && u.repairTargetUnit == null && u.repairTargetBuilding == null);
+            boolean isStopped = (u.stance == Stance.DEFAULT && !u.moving && u.attackTargetUnit == null && u.attackTargetBuilding == null && !hasRepairTarget);
             screen.fillRect(720, btnY, 90, 44, isStopped ? 0xFF3D2A18 : (hStop ? Palette.BROWN_HOVER : Palette.BROWN_BUTTON));
             int stopBorder = isStopped ? Palette.BLUE_PALE : (hStop ? Palette.GOLD : Palette.BROWN_BORDER);
             screen.drawLine(720, btnY, 809, btnY, stopBorder);
@@ -250,13 +256,13 @@ public final class DossierRenderer {
             }
             BitmapFont.drawText(screen, "GUARD", 830, btnY + 14, isGuarding ? 0xFF00FFFF : (hGrd ? Palette.WHITE : Palette.BLUE_PALE), 2);
 
-            boolean isCollector = (u.type == UnitType.COLLECTOR);
-            boolean isMechanic = (u.type == UnitType.MECHANIC);
-            String a3Name = isCollector ? (u.crystalLoad > 0 ? "UNLOAD" : "COLLECT") : (isMechanic ? "REPAIR" : "HUNT");
+            boolean isCollector = u.isHarvester();
+            boolean isMechanic = u.isRepairer();
+            String a3Name = isCollector ? (u.harvester.hasCargo() ? "UNLOAD" : "COLLECT") : (isMechanic ? "REPAIR" : "HUNT");
             boolean hA3 = (game.mouseX >= INSPECTOR_BTN3_X0 && game.mouseX < INSPECTOR_BTN3_X1 && game.mouseY >= btnY && game.mouseY < btnY + 44);
             boolean isHunting = (!isCollector && !isMechanic && u.stance == Stance.HUNT);
-            boolean isCollecting = (isCollector && u.autoCollect);
-            boolean isRepairMode = (isMechanic && u.autoRepair);
+            boolean isCollecting = (isCollector && u.harvester.autoCollect);
+            boolean isRepairMode = (isMechanic && u.repairer.autoRepair);
             boolean isA3Active = isHunting || isCollecting || isRepairMode;
 
             screen.fillRect(914, btnY, 92, 44, isA3Active ? 0xFF143820 : (hA3 ? Palette.BROWN_HOVER : Palette.BROWN_BUTTON));
@@ -270,7 +276,7 @@ public final class DossierRenderer {
             }
             int a3X = 936;
             if (isCollector) {
-                a3X = (u.crystalLoad > 0) ? 926 : 922;
+                a3X = u.harvester.hasCargo() ? 926 : 922;
             } else if (isMechanic) {
                 a3X = 926;
             }
