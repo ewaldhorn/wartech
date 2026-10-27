@@ -7,7 +7,7 @@ public final class Camera {
     public static final int VIEW_HEIGHT = Display.HEIGHT;
     public static final double PAN_SPEED = 1200.0; // px/sec (18.75 tiles/sec)
 
-    public static final double ZOOM_MIN     = 0.20; // 20%
+    public static final double ZOOM_MIN     = 0.10; // 10%
     public static final double ZOOM_DEFAULT = 0.50; // 50% Default
     public static final double ZOOM_MAX     = 1.00; // 100% Real Size
     public static final double ZOOM_STEP    = 0.10; // 10% increments
