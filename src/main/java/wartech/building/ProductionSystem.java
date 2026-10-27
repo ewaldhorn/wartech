@@ -143,8 +143,12 @@ public class ProductionSystem {
         double spawnX = trained.x;
         double spawnY = trained.y;
         switch (ut) {
-            case COLLECTOR -> trained.autoCollect = true;
-            case MECHANIC -> trained.autoRepair = true;
+            case COLLECTOR -> {
+                if (trained.harvester != null) trained.harvester.autoCollect = true;
+            }
+            case MECHANIC -> {
+                if (trained.repairer != null) trained.repairer.autoRepair = true;
+            }
             case null, default -> { }
         }
         if (!game.addUnit(trained)) {
@@ -161,12 +165,12 @@ public class ProductionSystem {
             scatterX = Math.clamp(scatterX, 16.0, game.map.width * GameMap.TILE_SIZE - 16.0);
             scatterY = Math.clamp(scatterY, 16.0, game.map.height * GameMap.TILE_SIZE - 16.0);
 
-            if (ut == UnitType.COLLECTOR) {
+            if (ut == UnitType.COLLECTOR && trained.harvester != null) {
                 int rx = (int) (factory.rallyX / GameMap.TILE_SIZE);
                 int ry = (int) (factory.rallyY / GameMap.TILE_SIZE);
                 if (game.map.inBounds(rx, ry) && game.map.crystals[game.map.index(rx, ry)] > 0) {
-                    trained.harvestTargetX = factory.rallyX;
-                    trained.harvestTargetY = factory.rallyY;
+                    trained.harvester.harvestTargetX = factory.rallyX;
+                    trained.harvester.harvestTargetY = factory.rallyY;
                 }
             }
             trained.moveTo(scatterX, scatterY);
@@ -198,7 +202,7 @@ public class ProductionSystem {
                     if (b.type == BuildingType.REFINERY) {
                         if (game.unitCount < WarTech.MAX_UNITS) {
                             var col = b.spawnUnit(UnitType.COLLECTOR, game.map);
-                            col.autoCollect = true;
+                            if (col.harvester != null) col.harvester.autoCollect = true;
                             game.addUnit(col);
                         } else {
                             game.statusToast = "UNIT CAPACITY FULL - COLLECTOR NOT DEPLOYED";
