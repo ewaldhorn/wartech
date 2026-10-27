@@ -6,6 +6,7 @@ import wartech.ai.Difficulty;
 import wartech.core.Faction;
 import wartech.core.WarTech;
 import wartech.map.GameMap;
+import wartech.unit.ScavengerRole;
 import wartech.unit.Unit;
 import wartech.unit.UnitType;
 
@@ -23,7 +24,8 @@ public class ThreatSystem {
     public void updateScavengers(double dt, GameMap map) {
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction != Faction.NEUTRAL || u.type != UnitType.SCAVENGER_DRONE) continue;
+            if (u.isDestroyed() || u.faction != Faction.NEUTRAL || u.scavenger == null) continue;
+            var s = u.scavenger;
 
             if (!u.hasHuntStation) {
                 u.huntStationX = u.x;
@@ -31,32 +33,30 @@ public class ThreatSystem {
                 u.hasHuntStation = true;
             }
 
-            Wreckage wreck = u.salvageTarget;
-            if (wreck != null && (!wreck.active || wreck.scrapValue <= 0 || wreck.id != u.salvageTargetId)) {
+            Wreckage wreck = s.salvageTarget;
+            if (wreck != null && (!wreck.active || wreck.scrapValue <= 0 || wreck.id != s.salvageTargetId)) {
                 wreck = null;
-                u.salvageTarget = null;
-                u.salvageTargetId = 0;
+                s.clearTarget();
             }
 
-            boolean hauling = u.scrapCarried >= Unit.MAX_SCRAP;
+            boolean hauling = s.isFull();
             if (!hauling && wreck == null) {
                 wreck = findWreck(u);
-                u.salvageTarget = wreck;
-                u.salvageTargetId = wreck != null ? wreck.id : 0;
-                u.salvageTimer = 0.0;
-                if (wreck == null && u.scrapCarried > 0) hauling = true;
+                s.salvageTarget = wreck;
+                s.salvageTargetId = wreck != null ? wreck.id : 0;
+                s.salvageTimer = 0.0;
+                if (wreck == null && s.hasCargo()) hauling = true;
             }
 
             if (hauling) {
-                u.salvageTarget = null;
-                u.salvageTargetId = 0;
+                s.clearTarget();
                 double hdx = u.huntStationX - u.x;
                 double hdy = u.huntStationY - u.y;
                 if (hdx * hdx + hdy * hdy <= 64.0 * 64.0) {
                     deliverScrap(u);
                 } else if (!u.moving) {
                     u.moveTo(u.huntStationX, u.huntStationY);
-                    u.returningScrap = true;
+                    s.returningScrap = true;
                 }
                 continue;
             }
@@ -71,17 +71,16 @@ public class ThreatSystem {
             }
 
             u.moving = false;
-            u.salvageTimer += dt;
-            while (u.salvageTimer >= 0.5 && wreck != null) {
-                u.salvageTimer -= 0.5;
-                int take = Math.min(20, Math.min(wreck.scrapValue, Unit.MAX_SCRAP - u.scrapCarried));
+            s.salvageTimer += dt;
+            while (s.salvageTimer >= 0.5 && wreck != null) {
+                s.salvageTimer -= 0.5;
+                int take = Math.min(20, Math.min(wreck.scrapValue, ScavengerRole.MAX_SCRAP - s.scrapCarried));
                 wreck.scrapValue -= take;
-                u.scrapCarried += take;
+                s.scrapCarried += take;
                 game.spawnEffect(Effect.TYPE_SPARK, wreck.x, wreck.y, 0.25, 12.0);
                 if (wreck.scrapValue <= 0) {
                     wreck.active = false;
-                    u.salvageTarget = null;
-                    u.salvageTargetId = 0;
+                    s.clearTarget();
                     wreck = null;
                 }
             }
@@ -106,8 +105,10 @@ public class ThreatSystem {
     }
 
     private void deliverScrap(Unit u) {
-        u.scrapCarried = 0;
-        u.returningScrap = false;
+        if (u.scavenger != null) {
+            u.scavenger.scrapCarried = 0;
+            u.scavenger.returningScrap = false;
+        }
         u.moving = false;
         if (game.selectedDifficulty.atLeast(Difficulty.MEDIUM)
                 && reinforcementsSpawned < MAX_REINFORCEMENTS

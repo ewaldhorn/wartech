@@ -38,7 +38,7 @@ public final class EnemyRetreat {
                 u.retreatRetries = 0;
             }
             if (!u.retreatingToRepair) return;
-        } else if (u.hp >= (int)(u.maxHp * retreatThreshold) || u.isRepairing) {
+        } else if (u.hp >= (int)(u.maxHp * retreatThreshold) || u.isRepairing()) {
             return;
         }
         double dToFac = Math.sqrt((fac.getCenterX() - u.x) * (fac.getCenterX() - u.x) + (fac.getCenterY() - u.y) * (fac.getCenterY() - u.y));

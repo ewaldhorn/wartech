@@ -7,6 +7,7 @@ import wartech.building.BuildingType;
 import wartech.core.Faction;
 import wartech.core.WarTech;
 import wartech.map.GameMap;
+import wartech.unit.RepairRole;
 import wartech.unit.Unit;
 import wartech.unit.UnitType;
 
@@ -201,52 +202,53 @@ public class CombatEngine {
     }
 
     public void updateMechanic(Unit u, double dt) {
-        if (u.type != UnitType.MECHANIC || u.isDestroyed()) return;
+        if (u.repairer == null || u.isDestroyed()) return;
+        var r = u.repairer;
 
-        if (u.isRepairing) {
+        if (r.isRepairing) {
             boolean targetValid = false;
             int missingHp = 0;
             double targetCenterX = u.x;
             double targetCenterY = u.y;
 
-            if (u.repairTargetUnit != null) {
-                if (!u.repairTargetUnit.isDestroyed() && u.repairTargetUnit.type.isVehicle() && u.repairTargetUnit.hp < u.repairTargetUnit.maxHp) {
+            if (r.repairTargetUnit != null) {
+                if (!r.repairTargetUnit.isDestroyed() && r.repairTargetUnit.type.isVehicle() && r.repairTargetUnit.hp < r.repairTargetUnit.maxHp) {
                     targetValid = true;
-                    missingHp = u.repairTargetUnit.maxHp - u.repairTargetUnit.hp;
-                    targetCenterX = u.repairTargetUnit.x;
-                    targetCenterY = u.repairTargetUnit.y;
+                    missingHp = r.repairTargetUnit.maxHp - r.repairTargetUnit.hp;
+                    targetCenterX = r.repairTargetUnit.x;
+                    targetCenterY = r.repairTargetUnit.y;
                 } else {
-                    u.repairTargetUnit = null;
+                    r.repairTargetUnit = null;
                 }
-            } else if (u.repairTargetBuilding != null) {
-                if (!u.repairTargetBuilding.isDestroyed() && !u.repairTargetBuilding.constructing && u.repairTargetBuilding.hp < u.repairTargetBuilding.maxHp) {
+            } else if (r.repairTargetBuilding != null) {
+                if (!r.repairTargetBuilding.isDestroyed() && !r.repairTargetBuilding.constructing && r.repairTargetBuilding.hp < r.repairTargetBuilding.maxHp) {
                     targetValid = true;
-                    missingHp = u.repairTargetBuilding.maxHp - u.repairTargetBuilding.hp;
-                    targetCenterX = u.repairTargetBuilding.getCenterX();
-                    targetCenterY = u.repairTargetBuilding.getCenterY();
+                    missingHp = r.repairTargetBuilding.maxHp - r.repairTargetBuilding.hp;
+                    targetCenterX = r.repairTargetBuilding.getCenterX();
+                    targetCenterY = r.repairTargetBuilding.getCenterY();
                 } else {
-                    u.repairTargetBuilding = null;
+                    r.repairTargetBuilding = null;
                 }
             }
 
             if (targetValid) {
-                if (u.repairTargetUnit != null) {
-                    double rdx = u.repairTargetUnit.x - u.x;
-                    double rdy = u.repairTargetUnit.y - u.y;
-                    if (Math.sqrt(rdx * rdx + rdy * rdy) > Unit.REPAIR_UNIT_RANGE) {
-                        u.isRepairing = false;
+                if (r.repairTargetUnit != null) {
+                    double rdx = r.repairTargetUnit.x - u.x;
+                    double rdy = r.repairTargetUnit.y - u.y;
+                    if (Math.sqrt(rdx * rdx + rdy * rdy) > RepairRole.REPAIR_UNIT_RANGE) {
+                        r.isRepairing = false;
                         u.moving = true;
                         targetValid = false;
                     }
-                } else if (u.repairTargetBuilding != null) {
-                    double minBx = (double) u.repairTargetBuilding.pixelX;
-                    double maxBx = (double) (u.repairTargetBuilding.pixelX + u.repairTargetBuilding.type.widthTiles * GameMap.TILE_SIZE);
-                    double minBy = (double) u.repairTargetBuilding.pixelY;
-                    double maxBy = (double) (u.repairTargetBuilding.pixelY + u.repairTargetBuilding.type.heightTiles * GameMap.TILE_SIZE);
+                } else if (r.repairTargetBuilding != null) {
+                    double minBx = (double) r.repairTargetBuilding.pixelX;
+                    double maxBx = (double) (r.repairTargetBuilding.pixelX + r.repairTargetBuilding.type.widthTiles * GameMap.TILE_SIZE);
+                    double minBy = (double) r.repairTargetBuilding.pixelY;
+                    double maxBy = (double) (r.repairTargetBuilding.pixelY + r.repairTargetBuilding.type.heightTiles * GameMap.TILE_SIZE);
                     double ebdx = Math.clamp(u.x, minBx, maxBx) - u.x;
                     double ebdy = Math.clamp(u.y, minBy, maxBy) - u.y;
-                    if (Math.sqrt(ebdx * ebdx + ebdy * ebdy) > Unit.REPAIR_BUILDING_RANGE) {
-                        u.isRepairing = false;
+                    if (Math.sqrt(ebdx * ebdx + ebdy * ebdy) > RepairRole.REPAIR_BUILDING_RANGE) {
+                        r.isRepairing = false;
                         u.moving = true;
                         targetValid = false;
                     }
@@ -254,19 +256,19 @@ public class CombatEngine {
             }
 
             if (!targetValid) {
-                u.isRepairing = false;
-                u.repairHpCarry = 0.0;
+                r.isRepairing = false;
+                r.repairHpCarry = 0.0;
             } else {
                 int availableCredits = (u.faction == Faction.PLAYER) ? game.playerCredits : game.enemyAI.credits;
 
-                if (u.repairCreditAccumulator < 1.0) {
+                if (r.repairCreditAccumulator < 1.0) {
                     if (availableCredits >= 1) {
                         if (u.faction == Faction.PLAYER) {
                             game.playerCredits -= 1;
                         } else {
                             game.enemyAI.credits -= 1;
                         }
-                        u.repairCreditAccumulator += 10.0;
+                        r.repairCreditAccumulator += 10.0;
                     } else {
                         if (u.selected && u.faction == Faction.PLAYER) {
                             game.statusToast = "REPAIRS ON HOLD - INSUFFICIENT CREDITS";
@@ -274,32 +276,32 @@ public class CombatEngine {
                     }
                 }
 
-                if (u.repairCreditAccumulator >= 1.0) {
+                if (r.repairCreditAccumulator >= 1.0) {
                     double hpToHeal = Math.min((double) missingHp,
-                        Math.min(u.repairCreditAccumulator, 60.0 * dt + u.repairHpCarry));
+                        Math.min(r.repairCreditAccumulator, 60.0 * dt + r.repairHpCarry));
                     int healInt = (int) hpToHeal;
-                    u.repairHpCarry = hpToHeal - healInt;
+                    r.repairHpCarry = hpToHeal - healInt;
 
                     if (healInt > 0) {
-                        if (u.repairTargetUnit != null) {
-                            u.repairTargetUnit.hp = Math.min(u.repairTargetUnit.maxHp, u.repairTargetUnit.hp + healInt);
-                            if (u.repairTargetUnit.hp >= u.repairTargetUnit.maxHp) {
+                        if (r.repairTargetUnit != null) {
+                            r.repairTargetUnit.hp = Math.min(r.repairTargetUnit.maxHp, r.repairTargetUnit.hp + healInt);
+                            if (r.repairTargetUnit.hp >= r.repairTargetUnit.maxHp) {
                                 if (u.faction == Faction.PLAYER && game.campaignManager != null) {
-                                    game.campaignManager.onVehicleRepaired(u.repairTargetUnit.type);
+                                    game.campaignManager.onVehicleRepaired(r.repairTargetUnit.type);
                                 }
-                                u.repairTargetUnit = null;
-                                u.isRepairing = false;
-                                u.repairHpCarry = 0.0;
+                                r.repairTargetUnit = null;
+                                r.isRepairing = false;
+                                r.repairHpCarry = 0.0;
                             }
-                        } else if (u.repairTargetBuilding != null) {
-                            u.repairTargetBuilding.hp = Math.min(u.repairTargetBuilding.maxHp, u.repairTargetBuilding.hp + healInt);
-                            if (u.repairTargetBuilding.hp >= u.repairTargetBuilding.maxHp) {
-                                u.repairTargetBuilding = null;
-                                u.isRepairing = false;
-                                u.repairHpCarry = 0.0;
+                        } else if (r.repairTargetBuilding != null) {
+                            r.repairTargetBuilding.hp = Math.min(r.repairTargetBuilding.maxHp, r.repairTargetBuilding.hp + healInt);
+                            if (r.repairTargetBuilding.hp >= r.repairTargetBuilding.maxHp) {
+                                r.repairTargetBuilding = null;
+                                r.isRepairing = false;
+                                r.repairHpCarry = 0.0;
                             }
                         }
-                        u.repairCreditAccumulator = Math.max(0.0, u.repairCreditAccumulator - healInt);
+                        r.repairCreditAccumulator = Math.max(0.0, r.repairCreditAccumulator - healInt);
                         if (game.fxRng.chance(0.3)) {
                             game.spawnEffect(Effect.TYPE_SPARK,
                                 targetCenterX + game.fxRng.range(-8.0, 8.0),
@@ -310,7 +312,7 @@ public class CombatEngine {
             }
         }
 
-        if (u.autoRepair && !u.isRepairing && !u.moving && u.repairTargetUnit == null && u.repairTargetBuilding == null) {
+        if (r.autoRepair && !r.isRepairing && !u.moving && r.repairTargetUnit == null && r.repairTargetBuilding == null) {
             Unit bestUnit = null;
             double bestDistSq = Double.MAX_VALUE;
 
@@ -343,29 +345,29 @@ public class CombatEngine {
 
             if (bestUnit != null) {
                 u.repairUnit(bestUnit);
-                u.autoRepairJob = true;
+                r.autoRepairJob = true;
             } else if (bestBuilding != null) {
                 u.repairBuilding(bestBuilding);
-                u.autoRepairJob = true;
+                r.autoRepairJob = true;
             }
         }
 
-        if (u.autoRepair && u.autoRepairJob && !u.isRepairing) {
+        if (r.autoRepair && r.autoRepairJob && !r.isRepairing) {
             boolean jobValid = false;
-            if (u.repairTargetUnit != null && !u.repairTargetUnit.isDestroyed()) {
-                jobValid = game.withinBaseLeash(u.repairTargetUnit.x, u.repairTargetUnit.y, u.faction);
-            } else if (u.repairTargetBuilding != null && !u.repairTargetBuilding.isDestroyed()) {
-                jobValid = game.withinBaseLeash(u.repairTargetBuilding.getCenterX(), u.repairTargetBuilding.getCenterY(), u.faction);
+            if (r.repairTargetUnit != null && !r.repairTargetUnit.isDestroyed()) {
+                jobValid = game.withinBaseLeash(r.repairTargetUnit.x, r.repairTargetUnit.y, u.faction);
+            } else if (r.repairTargetBuilding != null && !r.repairTargetBuilding.isDestroyed()) {
+                jobValid = game.withinBaseLeash(r.repairTargetBuilding.getCenterX(), r.repairTargetBuilding.getCenterY(), u.faction);
             }
             if (!jobValid) {
-                u.repairTargetUnit = null;
-                u.repairTargetBuilding = null;
-                u.autoRepairJob = false;
+                r.repairTargetUnit = null;
+                r.repairTargetBuilding = null;
+                r.autoRepairJob = false;
                 u.moving = false;
             }
         }
-        if (u.autoRepair && !u.isRepairing && !u.moving
-                && u.repairTargetUnit == null && u.repairTargetBuilding == null
+        if (r.autoRepair && !r.isRepairing && !u.moving
+                && r.repairTargetUnit == null && r.repairTargetBuilding == null
                 && !game.withinBaseLeash(u.x, u.y, u.faction)) {
             Building home = game.findNearestBuilding(u.x, u.y, u.faction);
             if (home != null) {

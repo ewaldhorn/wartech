@@ -17,6 +17,8 @@ import wartech.combat.Wreckage;
 import wartech.map.GameMap;
 import wartech.map.MapSize;
 import wartech.render.Renderer;
+import wartech.unit.HarvesterRole;
+import wartech.unit.RepairRole;
 import wartech.unit.Stance;
 import wartech.unit.Unit;
 import wartech.unit.UnitNavigation;
@@ -407,7 +409,7 @@ public class WarTech {
         addBuilding(new Building(BuildingType.REFINERY, Faction.PLAYER, 12, map.height - 8));
 
         var pCol = new Unit(UnitType.COLLECTOR, Faction.PLAYER, 14 * GameMap.TILE_SIZE, (map.height - 5) * GameMap.TILE_SIZE);
-        pCol.autoCollect = true;
+        if (pCol.harvester != null) pCol.harvester.autoCollect = true;
         addUnit(pCol);
         addUnit(new Unit(UnitType.TROOPER_RIFLE, Faction.PLAYER, 9 * GameMap.TILE_SIZE, (map.height - 7) * GameMap.TILE_SIZE));
         addUnit(new Unit(UnitType.SCOUT_TRIKE, Faction.PLAYER, 10 * GameMap.TILE_SIZE, (map.height - 7) * GameMap.TILE_SIZE));
@@ -417,7 +419,7 @@ public class WarTech {
         addBuilding(new Building(BuildingType.REFINERY, Faction.ENEMY, map.width - 10, 8));
 
         var eCol = new Unit(UnitType.COLLECTOR, Faction.ENEMY, (map.width - 9) * GameMap.TILE_SIZE, 11 * GameMap.TILE_SIZE);
-        eCol.autoCollect = true;
+        if (eCol.harvester != null) eCol.harvester.autoCollect = true;
         addUnit(eCol);
         addUnit(new Unit(UnitType.RAVAGER_TANK, Faction.ENEMY, (map.width - 12) * GameMap.TILE_SIZE, 10 * GameMap.TILE_SIZE));
         if (diff == Difficulty.HARD) {
@@ -602,35 +604,36 @@ public class WarTech {
             var u = units[i];
             u.update(dt, map);
 
-            if (u.type == UnitType.COLLECTOR && !u.yielding) {
+            if (u.harvester != null && !u.isYielding()) {
+                var h = u.harvester;
                 boolean creditsFull = (u.faction == Faction.PLAYER && playerCredits >= MAX_CREDITS)
                         || (u.faction == Faction.ENEMY && enemyAI.credits >= MAX_CREDITS);
-                if (u.harvestRetryTimer > 0.0) u.harvestRetryTimer -= dt;
-                if (u.crystalLoad > 0) {
+                if (h.harvestRetryTimer > 0.0) h.harvestRetryTimer -= dt;
+                if (h.crystalLoad > 0) {
                     Building ref = findNearestRefinery(u.x, u.y, u.faction);
                     if (ref != null) {
                         double dSq = (ref.getCenterX() - u.x) * (ref.getCenterX() - u.x) + (ref.getCenterY() + 53.0 - u.y) * (ref.getCenterY() + 53.0 - u.y);
                         if (dSq <= REFINERY_DEPOSIT_RADIUS * REFINERY_DEPOSIT_RADIUS) {
                             if (u.faction == Faction.PLAYER) {
-                                int deposit = addPlayerCredits(u.crystalLoad);
+                                int deposit = addPlayerCredits(h.crystalLoad);
                                 if (deposit > 0) {
-                                    u.crystalLoad -= deposit;
+                                    h.crystalLoad -= deposit;
                                     totalCreditsHarvested += deposit;
                                     statusToast = "DEPOSITED +" + deposit + " CREDITS";
                                     spawnEffect(Effect.TYPE_HARVEST_DUST, ref.getCenterX(), ref.getCenterY() + 53.0, 0.4, 28.0);
                                 }
                                 creditsFull = playerCredits >= MAX_CREDITS;
                             } else {
-                                u.crystalLoad -= enemyAI.addCredits(u.crystalLoad);
+                                h.crystalLoad -= enemyAI.addCredits(h.crystalLoad);
                                 creditsFull = enemyAI.credits >= MAX_CREDITS;
                             }
-                            if (u.crystalLoad == 0) {
-                                u.returningToRefinery = false;
-                                if (u.autoCollect && !creditsFull) {
+                            if (h.crystalLoad == 0) {
+                                h.returningToRefinery = false;
+                                if (h.autoCollect && !creditsFull) {
                                     inputController.orders.sendCollectorToHarvest(u);
                                 }
                             } else {
-                                u.returningToRefinery = true; // still holding crystals so wait
+                                h.returningToRefinery = true; // still holding crystals so wait
                             }
                         }
                     }
@@ -638,21 +641,21 @@ public class WarTech {
 
                 if (creditsFull) {
                     Building ref = findNearestRefinery(u.x, u.y, u.faction);
-                    if (ref != null && !u.returningToRefinery) {
+                    if (ref != null && !h.returningToRefinery) {
                         double hx = ref.getCenterX() - u.x;
                         double hy = ref.getCenterY() + 53.0 - u.y;
                         if (hx * hx + hy * hy > REFINERY_DEPOSIT_RADIUS * REFINERY_DEPOSIT_RADIUS) {
                             u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
                         }
-                        u.returningToRefinery = true;
+                        h.returningToRefinery = true;
                         if (u.selected) statusToast = "CREDIT CAP REACHED - COLLECTORS HOLDING AT BASE";
                     }
-                } else if (u.returningToRefinery && !u.moving && u.crystalLoad == 0 && u.autoCollect) {
-                    u.returningToRefinery = false;
+                } else if (h.returningToRefinery && !u.moving && h.crystalLoad == 0 && h.autoCollect) {
+                    h.returningToRefinery = false;
                     inputController.orders.sendCollectorToHarvest(u);
                 }
 
-                if (u.returningToRefinery && !u.moving) {
+                if (h.returningToRefinery && !u.moving) {
                     Building ref = findNearestRefinery(u.x, u.y, u.faction);
                     boolean atRefinery = false;
                     if (ref != null) {
@@ -661,26 +664,26 @@ public class WarTech {
                         atRefinery = rdx * rdx + rdy * rdy <= REFINERY_DEPOSIT_RADIUS * REFINERY_DEPOSIT_RADIUS;
                     }
                     if (!atRefinery) {
-                        u.returningToRefinery = false;
-                        if (u.crystalLoad >= Unit.MAX_LOAD) {
-                            if (ref != null && u.harvestRetryTimer <= 0.0) {
+                        h.returningToRefinery = false;
+                        if (h.crystalLoad >= HarvesterRole.MAX_LOAD) {
+                            if (ref != null && h.harvestRetryTimer <= 0.0) {
                                 u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
-                                u.returningToRefinery = true;
-                                u.harvestRetryTimer = Unit.HARVEST_RETRY_INTERVAL;
+                                h.returningToRefinery = true;
+                                h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
                             }
-                        } else if (u.autoCollect) {
+                        } else if (h.autoCollect) {
                             inputController.orders.sendCollectorToHarvest(u);
                         }
                     }
                 }
 
-                if (u.autoCollect && !u.returningToRefinery && !creditsFull) {
-                    if (u.crystalLoad >= Unit.MAX_LOAD) {
+                if (h.autoCollect && !h.returningToRefinery && !creditsFull) {
+                    if (h.crystalLoad >= HarvesterRole.MAX_LOAD) {
                         Building ref = findNearestRefinery(u.x, u.y, u.faction);
-                        if (ref != null && u.harvestRetryTimer <= 0.0) {
+                        if (ref != null && h.harvestRetryTimer <= 0.0) {
                             u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
-                            u.returningToRefinery = true;
-                            u.harvestRetryTimer = Unit.HARVEST_RETRY_INTERVAL;
+                            h.returningToRefinery = true;
+                            h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
                             if (u.selected && u.faction == Faction.PLAYER) statusToast = "COLLECTOR FULL - RETURNING TO REFINERY";
                         }
                     } else {
@@ -691,23 +694,23 @@ public class WarTech {
                             int cIdx = map.index(utx, uty);
                             if (map.crystals[cIdx] > 0) {
                                 onCrystals = true;
-                                u.harvestTargetX = u.x;
-                                u.harvestTargetY = u.y;
-                                u.harvestTimer += dt;
-                                if (u.harvestTimer >= 1.2) {
-                                    u.harvestTimer = 0.0;
-                                    int mined = Math.min(Math.min(map.crystals[cIdx], Unit.HARVEST_YIELD), Unit.MAX_LOAD - u.crystalLoad);
+                                h.harvestTargetX = u.x;
+                                h.harvestTargetY = u.y;
+                                h.harvestTimer += dt;
+                                if (h.harvestTimer >= 1.2) {
+                                    h.harvestTimer = 0.0;
+                                    int mined = Math.min(Math.min(map.crystals[cIdx], HarvesterRole.HARVEST_YIELD), HarvesterRole.MAX_LOAD - h.crystalLoad);
                                     map.crystals[cIdx] -= mined;
-                                    u.crystalLoad += mined;
+                                    h.crystalLoad += mined;
                                     spawnEffect(Effect.TYPE_HARVEST_DUST, u.x, u.y, 0.3, 21.0);
 
                                     threatSystem.checkGeodeDisturbance(utx, uty, u);
 
-                                    if (u.crystalLoad >= Unit.MAX_LOAD) {
+                                    if (h.crystalLoad >= HarvesterRole.MAX_LOAD) {
                                         Building ref = findNearestRefinery(u.x, u.y, u.faction);
                                         if (ref != null) {
                                             u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
-                                            u.returningToRefinery = true;
+                                            h.returningToRefinery = true;
                                             if (u.selected && u.faction == Faction.PLAYER) statusToast = "COLLECTOR FULL - RETURNING TO BASE";
                                         }
                                     }
@@ -722,7 +725,7 @@ public class WarTech {
                 }
             }
 
-            if (!u.yielding) {
+            if (!u.isYielding()) {
                 combatEngine.updateMechanic(u, dt);
             }
 
@@ -966,8 +969,8 @@ public class WarTech {
                                             double ratioB = effMassA / (effMassA + effMassB);
 
                                             if (uB.faction == uA.faction) {
-                                                boolean parkedA = !uA.moving && !uA.yielding && UnitNavigation.inSingleLane(uA, map);
-                                                boolean parkedB = !uB.moving && !uB.yielding && UnitNavigation.inSingleLane(uB, map);
+                                                boolean parkedA = !uA.moving && !uA.isYielding() && UnitNavigation.inSingleLane(uA, map);
+                                                boolean parkedB = !uB.moving && !uB.isYielding() && UnitNavigation.inSingleLane(uB, map);
                                                 if (parkedA && !parkedB) {
                                                     ratioA = 0.0;
                                                     ratioB = 1.0;
@@ -1036,7 +1039,7 @@ public class WarTech {
         if (b == null) return true;
         double dx = b.getCenterX() - px;
         double dy = b.getCenterY() - py;
-        double leash = Unit.MECHANIC_LEASH_RANGE;
+        double leash = RepairRole.MECHANIC_LEASH_RANGE;
         return dx * dx + dy * dy <= leash * leash;
     }
 

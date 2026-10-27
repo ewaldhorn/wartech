@@ -30,7 +30,9 @@ public final class EnemyEconomy {
         Building grantRef = EnemyAI.findEnemyBuilding(BuildingType.REFINERY, game);
         if (ai.collectorGrantCooldown <= 0.0 && grantRef != null && game.unitCount < WarTech.MAX_UNITS) {
             var col = grantRef.spawnUnit(UnitType.COLLECTOR, game.map);
-            col.autoCollect = true;
+            if (col.harvester != null) {
+                col.harvester.autoCollect = true;
+            }
             game.addUnit(col);
             game.spawnEffect(Effect.TYPE_MUZZLE, col.x, col.y, AiTuning.SPAWN_EFFECT_SECONDS, AiTuning.SPAWN_EFFECT_SIZE);
             ai.collectorGrantCooldown = AiTuning.COLLECTOR_GRANT_COOLDOWN_SECONDS;
@@ -56,11 +58,11 @@ public final class EnemyEconomy {
     public void directCollectors(GameMap map, WarTech game) {
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction != Faction.ENEMY || u.type != UnitType.COLLECTOR) continue;
+            if (u.isDestroyed() || u.faction != Faction.ENEMY || u.harvester == null) continue;
 
-            if (u.crystalLoad >= Unit.MAX_LOAD) {
+            if (u.harvester.isFull()) {
                 returnToRefinery(u, game);
-            } else if (!u.moving && !u.returningToRefinery) {
+            } else if (!u.moving && !u.harvester.returningToRefinery) {
                 seekCrystals(u, map);
             }
         }
@@ -74,9 +76,11 @@ public final class EnemyEconomy {
         double dx = gx - u.x;
         double dy = gy - u.y;
         double depositRange = WarTech.REFINERY_DEPOSIT_RADIUS;
-        if (dx * dx + dy * dy > depositRange * depositRange && (!u.returningToRefinery || !u.moving)) {
+        if (dx * dx + dy * dy > depositRange * depositRange && (u.harvester == null || !u.harvester.returningToRefinery || !u.moving)) {
             u.moveTo(gx, gy);
-            u.returningToRefinery = true;
+            if (u.harvester != null) {
+                u.harvester.returningToRefinery = true;
+            }
         }
     }
 

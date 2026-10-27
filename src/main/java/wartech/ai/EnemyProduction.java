@@ -76,7 +76,7 @@ public final class EnemyProduction {
         game.map.updateInfluence(game.buildings, game.buildingCount);
         if (b.type == BuildingType.REFINERY && game.unitCount < WarTech.MAX_UNITS) {
             var col = b.spawnUnit(UnitType.COLLECTOR, game.map);
-            col.autoCollect = true;
+            if (col.harvester != null) col.harvester.autoCollect = true;
             game.addUnit(col);
         }
     }
@@ -130,8 +130,12 @@ public final class EnemyProduction {
         double spawnX = u.x;
         double spawnY = u.y;
         switch (ut) {
-            case COLLECTOR -> u.autoCollect = true;
-            case MECHANIC -> u.autoRepair = true;
+            case COLLECTOR -> {
+                if (u.harvester != null) u.harvester.autoCollect = true;
+            }
+            case MECHANIC -> {
+                if (u.repairer != null) u.repairer.autoRepair = true;
+            }
             case null, default -> { }
         }
         if (!game.addUnit(u)) {
