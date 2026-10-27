@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import wartech.building.BuildingType;
+import wartech.campaign.CampaignMission;
 import wartech.combat.Effect;
 import wartech.core.Faction;
 import wartech.core.KeyCode;
@@ -664,6 +665,33 @@ public class SimCheck {
         WarTech.wasm_key_up(KeyCode.DIGIT0 + digit);
     }
 
+    private static void testCampaignCreditObjectiveRequiresHeldCredits() throws Exception {
+        freshMatch();
+        WarTech g = liveGame();
+        g.campaignManager.openBriefing(CampaignMission.MISSION_DESERT_DAWN);
+        g.campaignManager.deployCurrentMission(g);
+
+        // Mission 0 requires targetCredits = 5000 and targetKills = 6
+        // Suppose player harvested 6000 total, but only holds startingCredits (1000)
+        g.totalCreditsHarvested = 6000;
+        g.playerCredits = 1000;
+        g.campaignManager.skitterersKilled = 6;
+        g.campaignManager.update(g, DT);
+
+        check(!g.campaignManager.primary1Done,
+                "campaign credit objective not satisfied when player holds fewer credits than target");
+        check(g.matchState == MatchState.IN_PROGRESS,
+                "match not won if player does not have required credits");
+
+        // Now give player the required credits
+        g.playerCredits = 5000;
+        g.campaignManager.update(g, DT);
+        check(g.campaignManager.primary1Done,
+                "campaign credit objective satisfied when player holds target credits");
+        check(g.matchState == MatchState.VICTORY,
+                "match won when both held credits and kills are satisfied");
+    }
+
     public static void main(String[] args) throws Exception {
         testControlGroups();
         testOrderMarkers();
@@ -675,6 +703,7 @@ public class SimCheck {
         testAiPipelineCap();
         testAiTurbineDemand();
         testUnitTraits();
+        testCampaignCreditObjectiveRequiresHeldCredits();
         System.out.println(failures == 0 ? "SIMCHECK PASS" : "SIMCHECK FAIL (" + failures + ")");
         if (failures != 0) System.exit(1);
     }
