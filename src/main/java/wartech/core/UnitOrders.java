@@ -4,6 +4,7 @@ import wartech.building.Building;
 import wartech.building.BuildingType;
 import wartech.combat.Effect;
 import wartech.map.GameMap;
+import wartech.unit.HarvesterRole;
 import wartech.unit.Stance;
 import wartech.unit.Unit;
 import wartech.unit.UnitType;
@@ -294,7 +295,6 @@ public final class UnitOrders {
                 u.hasHuntWaypoint = false;
                 if (targets.friendlyVehicle() != null && targets.friendlyVehicle().hp < targets.friendlyVehicle().maxHp) {
                     u.repairUnit(targets.friendlyVehicle());
-                    u.autoRepair = true;
                     game.statusToast = "MECHANIC: REPAIRING VEHICLE";
                     if (!orderPinged) {
                         orderPinged = true;
@@ -302,7 +302,6 @@ public final class UnitOrders {
                     }
                 } else if (targets.friendlyBuilding() != null && targets.friendlyBuilding().hp < targets.friendlyBuilding().maxHp && !targets.friendlyBuilding().constructing) {
                     u.repairBuilding(targets.friendlyBuilding());
-                    u.autoRepair = true;
                     game.statusToast = "MECHANIC: REPAIRING STRUCTURE";
                     if (!orderPinged) {
                         orderPinged = true;
@@ -342,10 +341,10 @@ public final class UnitOrders {
                     attackPinged = true;
                     game.spawnEffect(Effect.TYPE_ORDER_ATTACK, targets.targetBuilding().getCenterX(), targets.targetBuilding().getCenterY(), 0.6, 22.0);
                 }
-            } else if (targets.friendlyRefinery() != null && u.type == UnitType.COLLECTOR) {
+            } else if (targets.friendlyRefinery() != null && u.isHarvester()) {
                 u.hasHuntWaypoint = false;
-                u.returningToRefinery = true;
-                u.autoCollect = true;
+                u.harvester.returningToRefinery = true;
+                u.harvester.autoCollect = true;
                 u.moveTo(targets.friendlyRefinery().getCenterX(), targets.friendlyRefinery().getCenterY() + 53.0);
                 game.statusToast = "COLLECTOR RETURNING TO REFINERY";
                 anyCollectorOrdered = true;
@@ -353,12 +352,12 @@ public final class UnitOrders {
                     orderPinged = true;
                     game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyRefinery().getCenterX(), targets.friendlyRefinery().getCenterY() + 53.0, 0.5, 18.0);
                 }
-            } else if (targets.clickedCrystals() && u.type == UnitType.COLLECTOR) {
+            } else if (targets.clickedCrystals() && u.isHarvester()) {
                 u.hasHuntWaypoint = false;
-                u.autoCollect = true;
-                u.returningToRefinery = false;
-                u.harvestTargetX = targets.crystalTargetX();
-                u.harvestTargetY = targets.crystalTargetY();
+                u.harvester.autoCollect = true;
+                u.harvester.returningToRefinery = false;
+                u.harvester.harvestTargetX = targets.crystalTargetX();
+                u.harvester.harvestTargetY = targets.crystalTargetY();
                 u.moveTo(targets.crystalTargetX(), targets.crystalTargetY());
                 game.statusToast = "COLLECTOR HARVESTING CRYSTALS";
                 anyCollectorOrdered = true;
@@ -376,13 +375,11 @@ public final class UnitOrders {
         int huntCount = 0;
         for (int k = 0; k < groupMoveCount; k++) {
             var u = moveGroupUnits[k];
-            if (u.type == UnitType.COLLECTOR) {
-                u.autoCollect = false;
-                u.returningToRefinery = false;
-            } else if (u.type == UnitType.MECHANIC) {
-                u.repairTargetUnit = null;
-                u.repairTargetBuilding = null;
-                u.isRepairing = false;
+            if (u.harvester != null) {
+                u.harvester.autoCollect = false;
+                u.harvester.returningToRefinery = false;
+            } else if (u.repairer != null) {
+                u.repairer.clearTarget();
             }
             double targetCoordX = unitDestXBuf[k];
             double targetCoordY = unitDestYBuf[k];
@@ -444,11 +441,11 @@ public final class UnitOrders {
             u.hasHuntStation = false;
             u.returningToHuntStation = false;
             u.moving = false;
-            u.returningToRefinery = false;
             u.attackTargetUnit = null;
             u.attackTargetBuilding = null;
-            if (u.type == UnitType.COLLECTOR) {
-                u.autoCollect = false;
+            if (u.harvester != null) {
+                u.harvester.returningToRefinery = false;
+                u.harvester.autoCollect = false;
             }
         }
         game.statusToast = "ORDER: HOLD & GUARD [DEFENSIVE]";
@@ -475,17 +472,18 @@ public final class UnitOrders {
     }
 
     public void sendCollectorToHarvest(Unit u) {
-        if (u.isDestroyed() || u.type != UnitType.COLLECTOR) return;
-        if (u.harvestRetryTimer > 0.0) return;
-        u.autoCollect = true;
-        u.returningToRefinery = false;
+        if (u.isDestroyed() || u.harvester == null) return;
+        var h = u.harvester;
+        if (h.harvestRetryTimer > 0.0) return;
+        h.autoCollect = true;
+        h.returningToRefinery = false;
 
-        if (u.harvestTargetX > 0 && u.harvestTargetY > 0) {
-            int htx = (int) (u.harvestTargetX / GameMap.TILE_SIZE);
-            int hty = (int) (u.harvestTargetY / GameMap.TILE_SIZE);
+        if (h.harvestTargetX > 0 && h.harvestTargetY > 0) {
+            int htx = (int) (h.harvestTargetX / GameMap.TILE_SIZE);
+            int hty = (int) (h.harvestTargetY / GameMap.TILE_SIZE);
             if (game.map.inBounds(htx, hty) && game.map.crystals[game.map.index(htx, hty)] > 0) {
-                u.moveTo(u.harvestTargetX, u.harvestTargetY);
-                u.harvestRetryTimer = Unit.HARVEST_RETRY_INTERVAL;
+                u.moveTo(h.harvestTargetX, h.harvestTargetY);
+                h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
                 return;
             }
         }
@@ -511,40 +509,41 @@ public final class UnitOrders {
         }
 
         if (bestTx >= 0) {
-            u.harvestTargetX = (bestTx + 0.5) * GameMap.TILE_SIZE;
-            u.harvestTargetY = (bestTy + 0.5) * GameMap.TILE_SIZE;
-            u.moveTo(u.harvestTargetX, u.harvestTargetY);
-            u.harvestRetryTimer = Unit.HARVEST_RETRY_INTERVAL;
+            h.harvestTargetX = (bestTx + 0.5) * GameMap.TILE_SIZE;
+            h.harvestTargetY = (bestTy + 0.5) * GameMap.TILE_SIZE;
+            u.moveTo(h.harvestTargetX, h.harvestTargetY);
+            h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
             if (u.selected) game.statusToast = "COLLECTOR HARVESTING CRYSTALS";
         } else {
-            if (u.crystalLoad > 0) {
-                u.harvestRetryTimer = Unit.HARVEST_RETRY_INTERVAL;
+            if (h.hasCargo()) {
+                h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
                 Building ref = game.findNearestRefinery(u.x, u.y, u.faction);
                 if (ref != null) {
                     u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
-                    u.returningToRefinery = true;
+                    h.returningToRefinery = true;
                 }
             } else {
-                u.autoCollect = false;
+                h.autoCollect = false;
                 if (u.selected) game.statusToast = "CRYSTAL FIELDS DEPLETED";
             }
         }
     }
 
     public void toggleCollectSelectedCollector() {
-        if (game.selectedUnit == null || game.selectedUnit.type != UnitType.COLLECTOR || game.selectedUnit.faction != Faction.PLAYER) return;
-        game.selectedUnit.autoCollect = true;
-        if (game.selectedUnit.crystalLoad > 0) {
+        if (game.selectedUnit == null || game.selectedUnit.harvester == null || game.selectedUnit.faction != Faction.PLAYER) return;
+        var h = game.selectedUnit.harvester;
+        h.autoCollect = true;
+        if (h.hasCargo()) {
             Building ref = game.findNearestRefinery(game.selectedUnit.x, game.selectedUnit.y, Faction.PLAYER);
             if (ref != null) {
                 game.selectedUnit.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
-                game.selectedUnit.returningToRefinery = true;
+                h.returningToRefinery = true;
                 game.statusToast = "COLLECTOR RETURNING TO UNLOAD";
             } else {
                 game.statusToast = "NO OPERATIONAL REFINERY";
             }
         } else {
-            game.selectedUnit.harvestRetryTimer = 0.0;
+            h.harvestRetryTimer = 0.0;
             sendCollectorToHarvest(game.selectedUnit);
         }
     }
@@ -554,13 +553,12 @@ public final class UnitOrders {
     }
 
     public void toggleRepairSelectedMechanic() {
-        if (game.selectedUnit == null || game.selectedUnit.type != UnitType.MECHANIC || game.selectedUnit.faction != Faction.PLAYER) return;
-        game.selectedUnit.autoRepair = !game.selectedUnit.autoRepair;
-        if (!game.selectedUnit.autoRepair) {
+        if (game.selectedUnit == null || game.selectedUnit.repairer == null || game.selectedUnit.faction != Faction.PLAYER) return;
+        var r = game.selectedUnit.repairer;
+        r.autoRepair = !r.autoRepair;
+        if (!r.autoRepair) {
             game.selectedUnit.stop();
-            game.selectedUnit.repairTargetUnit = null;
-            game.selectedUnit.repairTargetBuilding = null;
-            game.selectedUnit.isRepairing = false;
+            r.clearTarget();
             game.statusToast = "MECHANIC: AUTO-REPAIR OFF";
         } else {
             game.statusToast = "MECHANIC: AUTO-REPAIR ON";
