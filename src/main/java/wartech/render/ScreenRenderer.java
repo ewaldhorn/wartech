@@ -542,7 +542,7 @@ public final class ScreenRenderer {
         String p1Suf = null;
         switch (m.id) {
             case CampaignMission.MISSION_DESERT_DAWN -> {
-            p1Pre = "HARVEST CR: "; p1Val = game.totalCreditsHarvested; p1Suf = m.targetCreditsSuffix;
+            p1Pre = "STORE CR: "; p1Val = game.playerCredits; p1Suf = m.targetCreditsSuffix;
             }
             case CampaignMission.MISSION_IRON_BULWARK -> {
             p1Pre = !cm.primary1Done ? "DEFEND: CON YARD (STATUS: LOST)"
@@ -565,7 +565,7 @@ public final class ScreenRenderer {
             p1Pre = "DESTROY WAR FACTORY & CON YARD";
             }
             case CampaignMission.MISSION_CONVOY_EXTRACTION -> {
-            p1Pre = "HARVEST CR: "; p1Val = game.totalCreditsHarvested; p1Suf = m.targetCreditsSuffix;
+            p1Pre = "STORE CR: "; p1Val = game.playerCredits; p1Suf = m.targetCreditsSuffix;
             }
             case CampaignMission.MISSION_DREAD_HARVEST -> {
             p1Pre = "DESTROY REFINERIES ("; p1Suf = " LEFT)";
@@ -592,7 +592,7 @@ public final class ScreenRenderer {
             p2Pre = "DESTROY OUTPOST ("; p2Suf = " LEFT)"; p2Val = countEnemyBuildings(game, null);
             }
             case CampaignMission.MISSION_VIPERS_NEST -> {
-            p2Pre = "HARVEST CR: "; p2Val = game.totalCreditsHarvested; p2Suf = m.targetCreditsSuffix;
+            p2Pre = "STORE CR: "; p2Val = game.playerCredits; p2Suf = m.targetCreditsSuffix;
             }
             case CampaignMission.MISSION_FORWARD_REDOUBT -> {
             int pTurrets = 0;
@@ -604,7 +604,7 @@ public final class ScreenRenderer {
             p2Pre = "GUN TURRETS: "; p2Val = pTurrets; p2Suf = m.targetBonusCountSuffix;
             }
             case CampaignMission.MISSION_ANCIENT_ECHOES -> {
-            p2Pre = "HARVEST ANCIENT CR: "; p2Val = game.totalCreditsHarvested; p2Suf = m.targetCreditsSuffix;
+            p2Pre = "STORE ANCIENT CR: "; p2Val = game.playerCredits; p2Suf = m.targetCreditsSuffix;
             }
             case CampaignMission.MISSION_SCAVENGER_RUN -> {
             p2Pre = "CLEAR EXPEDITION ("; p2Suf = " LEFT)"; p2Val = countEnemyBuildings(game, null);

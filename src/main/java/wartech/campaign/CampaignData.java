@@ -24,10 +24,10 @@ public final class CampaignData {
                 "expeditionary task force to establish an operational beachhead in the badlands.",
                 "Scouts report rich crystal fields, but indigenous crystalline lithoids (Shard",
                 "Skitterers) dwell dormant inside the geode nests across the mineral plateaus.",
-                "TASK: Deploy a Collector to harvest 5000 credits of raw crystals and eliminate",
+                "TASK: Deploy a Collector to store 5000 credits of raw crystals and eliminate",
                 "at least 6 aggressive Skitterers with Scout Trikes. Maintain positive power grid."
             })
-            .primaryObjectives(new String[] { "REFINED CR: 5000 CREDITS MINED", "CLEAR FAUNA: 6 SKITTERERS ELIMINATED" })
+            .primaryObjectives(new String[] { "STORE: 5000 CREDITS IN RESERVE", "CLEAR FAUNA: 6 SKITTERERS ELIMINATED" })
             .secondaryObjectives(new String[] { "BONUS: MAINTAIN POSITIVE BASE POWER" })
             .startingCredits(1000)
             .mapSeed(101L)
@@ -77,9 +77,9 @@ public final class CampaignData {
                 "subterranean geode nursery! Dense packs of aggressive Shard Skitterers are swarming.",
                 "Vanguard staging depot requires 20000 refined credits to secure regional supply.",
                 "TASK: Sweep the sulphur dunes with Scout Trikes, exterminate at least 12 Skitterers,",
-                "and mine 20000 credits. Maintain tactical speed and avoid any Scout Trike losses!"
+                "and store 20000 credits. Maintain tactical speed and avoid any Scout Trike losses!"
             })
-            .primaryObjectives(new String[] { "PURGE HIVE: 12 SKITTERERS ELIMINATED", "HARVEST: 20000 CREDITS MINED" })
+            .primaryObjectives(new String[] { "PURGE HIVE: 12 SKITTERERS ELIMINATED", "STORE: 20000 CREDITS IN RESERVE" })
             .secondaryObjectives(new String[] { "BONUS: ZERO SCOUT TRIKE LOSSES" })
             .startingCredits(1800)
             .mapSeed(102L)
@@ -133,10 +133,10 @@ public final class CampaignData {
                 "in the crater basin. Rogue Scavenger Drones and Quad-Walkers guard the relic sites.",
                 "We have unlocked the vehicle factories: manufacture medium Combat Tanks and fast",
                 "Scout Trikes to break the automata. TASK: Breach the crater ruins, destroy 2 Precursor",
-                "Quad-Walkers, and refine 30000 credits from the ancient mineral vaults while holding",
+                "Quad-Walkers, and store 30000 credits from the ancient mineral vaults while holding",
                 "off Syndicate probes."
             })
-            .primaryObjectives(new String[] { "RUINS: DESTROY 2 PRECURSOR WALKERS", "HARVEST: REFINE 30000 CR FROM CRATER" })
+            .primaryObjectives(new String[] { "RUINS: DESTROY 2 PRECURSOR WALKERS", "STORE: 30000 CR FROM CRATER" })
             .secondaryObjectives(new String[] { "BONUS: DESTROY 4 SCAVENGER DRONES" })
             .startingCredits(2500)
             .mapSeed(303L)
@@ -239,11 +239,11 @@ public final class CampaignData {
             .briefingText(new String[] {
                 "STRATEGIC DIRECTIVE: Fleet logistics require massive crystal refined shipments.",
                 "Dunestalker Ridge harbors two separated mineral basins, but Syndicate hunter packs",
-                "patrol the transit corridors. TASK: Establish forward mining posts, harvest 50000",
+                "patrol the transit corridors. TASK: Establish forward mining posts, store 50000",
                 "credits across the basins, and destroy the Syndicate staging base in the eastern dunes.",
                 "Field Mechanics to keep our haulers and escort tanks operational."
             })
-            .primaryObjectives(new String[] { "EXTRACTION: REFINE 50000 CREDITS", "STAGING BASE: DESTROY SYNDICATE COMMAND" })
+            .primaryObjectives(new String[] { "EXTRACTION: STORE 50000 CREDITS", "STAGING BASE: DESTROY SYNDICATE COMMAND" })
             .secondaryObjectives(new String[] { "BONUS: FIELD REPAIR 5 VEHICLES" })
             .startingCredits(4000)
             .mapSize(MapSize.CODE_LARGE_128)

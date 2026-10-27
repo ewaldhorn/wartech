@@ -50,7 +50,7 @@ public final class ObjectiveEvaluator {
 
     private void evaluateOp0(WarTech game) { // Desert Dawn
         CampaignMission m = cm.getCurrentMission();
-        cm.primary1Done = (game.totalCreditsHarvested >= m.targetCredits);
+        cm.primary1Done = (game.playerCredits >= m.targetCredits);
         cm.primary2Done = (cm.skitterersKilled >= m.targetKills);
         bonusSurvival(game.playerPowerNet < 0);
     }
@@ -86,7 +86,7 @@ public final class ObjectiveEvaluator {
     private void evaluateOp2(WarTech game) { // Viper's Nest
         CampaignMission m = cm.getCurrentMission();
         cm.primary1Done = (cm.skitterersKilled >= m.targetKills);
-        cm.primary2Done = (game.totalCreditsHarvested >= m.targetCredits);
+        cm.primary2Done = (game.playerCredits >= m.targetCredits);
         bonusSurvival(cm.trikesLost > 0);
     }
 
@@ -112,7 +112,7 @@ public final class ObjectiveEvaluator {
     private void evaluateOp4(WarTech game) { // Ancient Echoes
         CampaignMission m = cm.getCurrentMission();
         cm.primary1Done = (cm.walkersKilled >= m.targetKills);
-        cm.primary2Done = (game.totalCreditsHarvested >= m.targetCredits);
+        cm.primary2Done = (game.playerCredits >= m.targetCredits);
         bonusTask(cm.dronesKilled >= m.targetBonusCount);
     }
 
@@ -149,7 +149,7 @@ public final class ObjectiveEvaluator {
 
     private void evaluateOp7(WarTech game) { // Convoy Extraction
         CampaignMission m = cm.getCurrentMission();
-        cm.primary1Done = (game.totalCreditsHarvested >= m.targetCredits);
+        cm.primary1Done = (game.playerCredits >= m.targetCredits);
         int enemyCount = 0;
         for (int i = 0; i < game.buildingCount; i++) {
             Building b = game.buildings[i];
