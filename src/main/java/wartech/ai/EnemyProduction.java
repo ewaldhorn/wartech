@@ -145,11 +145,11 @@ public final class EnemyProduction {
         game.spawnEffect(Effect.TYPE_MUZZLE, spawnX, spawnY, AiTuning.SPAWN_EFFECT_SECONDS, AiTuning.SPAWN_EFFECT_SIZE);
 
         if (source.hasRallyPoint) {
-            double rx = source.rallyX + game.simRng.range(-AiTuning.RALLY_JITTER, AiTuning.RALLY_JITTER);
-            double ry = source.rallyY + game.simRng.range(-AiTuning.RALLY_JITTER, AiTuning.RALLY_JITTER);
+            double rx = source.rallyX + game.simRng.jitter(AiTuning.RALLY_JITTER);
+            double ry = source.rallyY + game.simRng.jitter(AiTuning.RALLY_JITTER);
             u.moveTo(rx, ry);
         } else {
-            u.moveTo(spawnX + game.simRng.range(-AiTuning.SPAWN_SPREAD_X, AiTuning.SPAWN_SPREAD_X),
+            u.moveTo(spawnX + game.simRng.jitter(AiTuning.SPAWN_SPREAD_X),
                     spawnY + AiTuning.SPAWN_OFFSET_Y + game.simRng.range(0.0, AiTuning.SPAWN_SPREAD_Y));
         }
     }

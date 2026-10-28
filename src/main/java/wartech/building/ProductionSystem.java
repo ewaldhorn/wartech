@@ -160,8 +160,8 @@ public class ProductionSystem {
         game.spawnEffect(Effect.TYPE_MUZZLE, spawnX, spawnY, 0.25, 21.0);
 
         if (factory.hasRallyPoint) {
-            double scatterX = factory.rallyX + game.simRng.range(-12.0, 12.0);
-            double scatterY = factory.rallyY + game.simRng.range(-12.0, 12.0);
+            double scatterX = factory.rallyX + game.simRng.jitter(12.0);
+            double scatterY = factory.rallyY + game.simRng.jitter(12.0);
             scatterX = Math.clamp(scatterX, 16.0, game.map.width * GameMap.TILE_SIZE - 16.0);
             scatterY = Math.clamp(scatterY, 16.0, game.map.height * GameMap.TILE_SIZE - 16.0);
 

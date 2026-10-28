@@ -126,8 +126,8 @@ public final class EnemyAssault {
                     dx = raidTarget.x;
                     dy = raidTarget.y;
                 }
-                orderAssault(u, dx + game.simRng.range(-AiTuning.ASSAULT_SPREAD, AiTuning.ASSAULT_SPREAD),
-                        dy + game.simRng.range(-AiTuning.ASSAULT_SPREAD, AiTuning.ASSAULT_SPREAD));
+                orderAssault(u, dx + game.simRng.jitter(AiTuning.ASSAULT_SPREAD),
+                        dy + game.simRng.jitter(AiTuning.ASSAULT_SPREAD));
                 sent++;
                 if (sent >= maxAssault) break;
             }

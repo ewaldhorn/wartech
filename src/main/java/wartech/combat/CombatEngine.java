@@ -304,8 +304,8 @@ public class CombatEngine {
                         r.repairCreditAccumulator = Math.max(0.0, r.repairCreditAccumulator - healInt);
                         if (game.fxRng.chance(0.3)) {
                             game.spawnEffect(Effect.TYPE_SPARK,
-                                targetCenterX + game.fxRng.range(-8.0, 8.0),
-                                targetCenterY + game.fxRng.range(-8.0, 8.0), 0.2, 10.0);
+                                targetCenterX + game.fxRng.jitter(8.0),
+                                targetCenterY + game.fxRng.jitter(8.0), 0.2, 10.0);
                         }
                     }
                 }
@@ -411,8 +411,8 @@ public class CombatEngine {
                 }
             }
             if (injuredTroop != null && bestDistSq > 90.0 * 90.0) {
-                u.moveTo(injuredTroop.x + game.simRng.range(-15.0, 15.0),
-                    injuredTroop.y + game.simRng.range(-15.0, 15.0));
+                u.moveTo(injuredTroop.x + game.simRng.jitter(15.0),
+                    injuredTroop.y + game.simRng.jitter(15.0));
             }
         }
     }
