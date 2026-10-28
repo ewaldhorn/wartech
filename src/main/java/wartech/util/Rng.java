@@ -1,4 +1,4 @@
-package wartech.core;
+package wartech.util;
 
 public final class Rng {
     private long state;
@@ -23,8 +23,20 @@ public final class Rng {
         return min + nextInt(max - min + 1);
     }
 
+    public boolean nextBoolean() {
+        return nextDouble() < 0.5;
+    }
+
     public double range(double min, double max) {
         return min + nextDouble() * (max - min);
+    }
+
+    public double jitter(double magnitude) {
+        return range(-magnitude, magnitude);
+    }
+
+    public double jitter(double center, double magnitude) {
+        return center + range(-magnitude, magnitude);
     }
 
     public boolean chance(double probability) {
