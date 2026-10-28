@@ -2,3 +2,4 @@
 target/
 game.wasm
 test/out/
+.vscode
