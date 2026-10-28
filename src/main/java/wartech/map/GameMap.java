@@ -6,7 +6,7 @@ import wartech.building.Building;
 import wartech.building.BuildingType;
 import wartech.core.Faction;
 import wartech.unit.Unit;
-import wartech.util.Rng;
+import wartech.util.SimpleRng;
 
 public final class GameMap {
     public static final int TILE_SIZE = 64;
@@ -88,7 +88,7 @@ public final class GameMap {
             buildingGrid[i] = null;
         }
 
-        var rng = new Rng(seed);
+        var rng = new SimpleRng(seed);
 
         createStartingBasePlateau(6, height - 14, 12, 9, true, rng);
         createStartingBasePlateau(width - 17, 4, 12, 9, false, rng);
@@ -197,7 +197,7 @@ public final class GameMap {
         return false;
     }
 
-    private void createStartingBasePlateau(int coreX0, int coreY0, int coreW, int coreH, boolean isPlayer, Rng rng) {
+    private void createStartingBasePlateau(int coreX0, int coreY0, int coreW, int coreH, boolean isPlayer, SimpleRng rng) {
         for (int y = coreY0; y < coreY0 + coreH; y++) {
             for (int x = coreX0; x < coreX0 + coreW; x++) {
                 if (inBounds(x, y)) {
@@ -329,7 +329,7 @@ public final class GameMap {
         }
     }
 
-    private void createRockPlateau(int x0, int y0, int w, int h, Rng rng, boolean solid) {
+    private void createRockPlateau(int x0, int y0, int w, int h, SimpleRng rng, boolean solid) {
         for (int y = y0; y < y0 + h; y++) {
             for (int x = x0; x < x0 + w; x++) {
                 if (!inBounds(x, y)) continue;
@@ -349,7 +349,7 @@ public final class GameMap {
         }
     }
 
-    private void createCrystalField(int cx, int cy, Rng rng) {
+    private void createCrystalField(int cx, int cy, SimpleRng rng) {
         int radius = 3 + rng.nextInt(3);
         for (int dy = -radius; dy <= radius; dy++) {
             for (int dx = -radius; dx <= radius; dx++) {
@@ -394,7 +394,7 @@ public final class GameMap {
         }
     }
 
-    private void createSmallCrystalField(int cx, int cy, Rng rng) {
+    private void createSmallCrystalField(int cx, int cy, SimpleRng rng) {
         int radius = 2 + rng.nextInt(2);
         for (int dy = -radius; dy <= radius; dy++) {
             for (int dx = -radius; dx <= radius; dx++) {

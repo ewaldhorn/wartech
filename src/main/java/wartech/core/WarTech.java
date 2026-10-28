@@ -23,8 +23,8 @@ import wartech.unit.Stance;
 import wartech.unit.Unit;
 import wartech.unit.UnitNavigation;
 import wartech.unit.UnitSpatialGrid;
-import wartech.util.Rng;
 import wartech.unit.UnitType;
+import wartech.util.Rng;
 
 public class WarTech {
     public static final String VERSION = BuildVersion.VERSION;
