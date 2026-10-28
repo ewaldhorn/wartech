@@ -23,6 +23,7 @@ import wartech.unit.Stance;
 import wartech.unit.Unit;
 import wartech.unit.UnitNavigation;
 import wartech.unit.UnitSpatialGrid;
+import wartech.util.Rng;
 import wartech.unit.UnitType;
 
 public class WarTech {
