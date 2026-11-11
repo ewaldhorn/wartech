@@ -76,6 +76,14 @@ public final class AudioEngine {
         failed = true;
     }
 
+    private boolean checkHealth() {
+        if (!backend.isHealthy()) {
+            fail();
+            return false;
+        }
+        return true;
+    }
+
     public void unlock() {
         if (failed)
             return;
@@ -83,10 +91,16 @@ public final class AudioEngine {
             if (unlocked) {
                 if (suspended)
                     setSuspended(false);
+                else {
+                    backend.resume();
+                    checkHealth();
+                }
                 return;
             }
-            if (!backend.init())
+            if (!backend.init()) {
+                checkHealth();
                 return;
+            }
             unlocked = true;
             applyVolumes();
         } catch (RuntimeException | Error e) {
@@ -122,6 +136,7 @@ public final class AudioEngine {
             backend.setBusGain(AudioBus.SFX, settings.busGain(AudioBus.SFX));
             backend.setBusGain(AudioBus.AMBIENCE, settings.busGain(AudioBus.AMBIENCE));
             backend.setMasterGain(settings.muted ? 0.0 : 1.0);
+            checkHealth();
         } catch (RuntimeException | Error e) {
             fail();
         }
@@ -136,6 +151,7 @@ public final class AudioEngine {
                 backend.suspend();
             else
                 backend.resume();
+            checkHealth();
         } catch (RuntimeException | Error e) {
             fail();
         }
@@ -157,10 +173,11 @@ public final class AudioEngine {
             return;
         try {
             double now = backend.now();
-            if (Double.isNaN(now) || Double.isInfinite(now))
+            if (!checkHealth() || Double.isNaN(now) || Double.isInfinite(now))
                 return;
             music.update(now, tension.level());
             ambience.update(now, tension.level());
+            checkHealth();
         } catch (RuntimeException | Error e) {
             fail();
         }
@@ -172,7 +189,7 @@ public final class AudioEngine {
         tension.add(Sfx.tensionWeight(type));
         if (!unlocked || suspended || failed)
             return;
-        if (Double.isNaN(x) || Double.isNaN(y))
+        if (!Double.isFinite(x) || !Double.isFinite(y))
             return;
         try {
             playSfxUnchecked(type, x, y);
@@ -183,7 +200,7 @@ public final class AudioEngine {
 
     private void playSfxUnchecked(int type, double x, double y) {
         double now = backend.now();
-        if (Double.isNaN(now) || Double.isInfinite(now))
+        if (!checkHealth() || Double.isNaN(now) || Double.isInfinite(now))
             return;
         if (now - lastPlayed[type] < Sfx.cooldown(type))
             return;
@@ -208,6 +225,7 @@ public final class AudioEngine {
 
         lastPlayed[type] = now;
         Sfx.play(backend, type, now, gain, pan);
+        checkHealth();
     }
 
     private boolean claimVoice(double now, int cap, int type) {

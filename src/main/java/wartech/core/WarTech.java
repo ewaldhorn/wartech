@@ -339,8 +339,6 @@ public class WarTech {
 
     private static void playEffectSound(byte type, double x, double y, double radius) {
         switch (type) {
-            case Effect.TYPE_EXPLOSION -> AudioEngine.playSfx(
-                    radius >= 40.0 ? Sfx.EXPLOSION_BIG : radius <= 20.0 ? Sfx.HIT : Sfx.EXPLOSION_SMALL, x, y);
             case Effect.TYPE_ORDER_MOVE -> AudioEngine.playSfx(Sfx.ORDER_MOVE, x, y);
             case Effect.TYPE_ORDER_ATTACK -> AudioEngine.playSfx(Sfx.ORDER_ATTACK, x, y);
             default -> {
@@ -654,6 +652,7 @@ public class WarTech {
                 }
 
                 spawnEffect(Effect.TYPE_EXPLOSION, u.x, u.y, 0.4, u.type.radius + 11.0);
+                AudioEngine.playSfx(Sfx.EXPLOSION_SMALL, u.x, u.y);
                 if (selectedUnit == u)
                     selectedUnit = null;
                 units[i] = units[--unitCount];
@@ -967,6 +966,7 @@ public class WarTech {
         b.takeDamage(dmg, fromFaction);
         if (b.isDestroyed()) {
             spawnEffect(Effect.TYPE_EXPLOSION, b.getCenterX(), b.getCenterY(), 0.6, 64.0);
+            AudioEngine.playSfx(Sfx.EXPLOSION_BIG, b.getCenterX(), b.getCenterY());
             map.updateInfluence(buildings, buildingCount);
             if (b.faction == Faction.ENEMY && fromFaction == Faction.PLAYER) {
                 buildingsDestroyed++;

@@ -96,7 +96,7 @@ public final class WebAudioBackend implements AudioBackend {
     private static native boolean nSuspend();
 
     @JSBody(script = """
-            try { if (window.__wt) { var p = window.__wt.ctx.resume(); if (p && p.catch) p.catch(function () {}); } return true; }
+            try { if (window.__wt && window.__wt.ctx.state === 'suspended') { var p = window.__wt.ctx.resume(); if (p && p.catch) p.catch(function () {}); } return true; }
             catch (e) { return false; }
             """)
     private static native boolean nResume();
@@ -223,6 +223,11 @@ public final class WebAudioBackend implements AudioBackend {
             } catch (e) { return false; }
             """)
     private static native boolean nSetWind(double freq, double gain, double sec);
+
+    @Override
+    public boolean isHealthy() {
+        return !dead;
+    }
 
     @Override
     public boolean init() {

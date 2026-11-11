@@ -96,7 +96,7 @@ public final class BrowserApp {
     @JSBody(script = "return document.hidden;")
     private static native boolean documentHidden();
 
-    @JSBody(params = {"id", "e"}, script = "var el = document.getElementById(id); return !!el && el.contains(e.target);")
+    @JSBody(params = {"id", "e"}, script = "try { var el = document.getElementById(id); return !!el && !!e && e.target instanceof Node && el.contains(e.target); } catch (err) { return false; }")
     private static native boolean eventInside(String id, JSObject e);
 
     @JSBody(params = "msg", script = "console.error(msg);")
@@ -583,6 +583,8 @@ public final class BrowserApp {
             audioUnlockBound = true;
             Window window = Window.current();
             window.addEventListener("pointerdown", (Event _) -> audio.unlock());
+            window.addEventListener("click", (Event _) -> audio.unlock());
+            window.addEventListener("touchend", (Event _) -> audio.unlock());
             window.addEventListener("keydown", (Event _) -> audio.unlock());
         }
     }

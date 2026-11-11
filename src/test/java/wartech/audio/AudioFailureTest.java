@@ -184,4 +184,31 @@ class AudioFailureTest {
         assertDoesNotThrow(() -> e.sfx(-1, 0, 0));
         assertDoesNotThrow(() -> e.sfx(999, 0, 0));
     }
+
+    @Test
+    void unhealthyBackendDisablesEngine() {
+        var b = new RecordingBackend();
+        var e = new AudioEngine(b, 1);
+        e.unlock();
+        assertFalse(e.hasFailed());
+        b.healthy = false;
+        e.update(0.1);
+        assertTrue(e.hasFailed());
+        assertFalse(e.isUnlocked());
+        int count = b.notes.size() + b.noises.size();
+        e.update(0.1);
+        e.sfx(Sfx.ORDER_MOVE, 0, 0);
+        assertEquals(count, b.notes.size() + b.noises.size());
+    }
+
+    @Test
+    void unlockResumesIfCalledAgainWhileUnlocked() {
+        var b = new RecordingBackend();
+        b.suspended = true;
+        var e = new AudioEngine(b, 1);
+        e.unlock();
+        assertTrue(e.isUnlocked());
+        e.unlock();
+        assertFalse(b.suspended);
+    }
 }

@@ -12,6 +12,10 @@ public interface AudioBackend {
 
     boolean init();
 
+    default boolean isHealthy() {
+        return true;
+    }
+
     double now();
 
     void setBusGain(int bus, double gain);

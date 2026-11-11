@@ -519,6 +519,7 @@ public class CombatEngine {
             boolean hit = p.update(dt, game.map);
             if (hit) {
                 game.spawnEffect(Effect.TYPE_EXPLOSION, p.x, p.y, 0.25, 16.0);
+                AudioEngine.playSfx(Sfx.HIT, p.x, p.y);
                 applyImpactDamage(p);
                 game.projectileCount--;
                 game.projectiles[i] = game.projectiles[game.projectileCount];

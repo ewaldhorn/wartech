@@ -12,6 +12,7 @@ final class RecordingBackend implements AudioBackend {
 
     double clock = 0.0;
     boolean initOk = true;
+    boolean healthy = true;
     boolean inited = false;
     boolean suspended = false;
     boolean windStarted = false;
@@ -25,6 +26,11 @@ final class RecordingBackend implements AudioBackend {
     public boolean init() {
         inited = initOk;
         return initOk;
+    }
+
+    @Override
+    public boolean isHealthy() {
+        return healthy;
     }
 
     @Override
