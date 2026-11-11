@@ -292,6 +292,45 @@
       box-shadow: 0 0 6px var(--accent-glow);
     }
 
+    /* Sound popover */
+    .sound-wrap { position: relative; }
+    #btnSound { padding: 5px 9px; font-size: 0.95rem; line-height: 1; }
+    #soundPanel {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 20;
+      width: 230px;
+      padding: 12px 14px;
+      background: var(--panel-bg);
+      border: 1px solid var(--accent-gold);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    }
+    #soundPanel.open { display: block; }
+    .sound-row {
+      display: grid;
+      grid-template-columns: 70px 1fr 32px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+    }
+    .sound-row input[type=range] { width: 100%; accent-color: var(--accent-gold); }
+    .sound-row .vol-val { text-align: right; color: var(--accent-gold); }
+    .sound-mute {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
     #unsupported {
       display: none;
       width: var(--game-width);
@@ -333,6 +372,24 @@
     </div>
 
     <div class="controls-panel">
+      <div class="sound-wrap">
+        <button id="btnSound" title="Sound settings" aria-label="Sound settings" aria-expanded="false">&#128266;</button>
+        <div id="soundPanel" role="dialog" aria-label="Sound settings">
+          <label class="sound-row">Music
+            <input id="volMusic" type="range" min="0" max="100" value="35">
+            <span id="volMusicVal" class="vol-val">35</span>
+          </label>
+          <label class="sound-row">SFX
+            <input id="volSfx" type="range" min="0" max="100" value="60">
+            <span id="volSfxVal" class="vol-val">60</span>
+          </label>
+          <label class="sound-row">Ambience
+            <input id="volAmbience" type="range" min="0" max="100" value="50">
+            <span id="volAmbienceVal" class="vol-val">50</span>
+          </label>
+          <label class="sound-mute"><input id="soundMute" type="checkbox"> Mute all</label>
+        </div>
+      </div>
       <button id="btnRestart">Restart</button>
     </div>
   </header>

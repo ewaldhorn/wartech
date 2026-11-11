@@ -5,6 +5,7 @@ package wartech.bridge;
 // persistence. Talks to the simulation through WarTech.wasm_*.
 
 import org.teavm.jso.JSBody;
+import org.teavm.jso.JSObject;
 import org.teavm.jso.browser.AnimationFrameCallback;
 import org.teavm.jso.browser.Location;
 import org.teavm.jso.browser.Performance;
@@ -19,6 +20,10 @@ import org.teavm.jso.dom.events.WheelEvent;
 import org.teavm.jso.dom.html.HTMLCanvasElement;
 import org.teavm.jso.dom.html.HTMLDocument;
 import org.teavm.jso.dom.html.HTMLElement;
+import org.teavm.jso.dom.html.HTMLInputElement;
+import wartech.audio.AudioEngine;
+import wartech.audio.AudioSettings;
+import wartech.audio.WebAudioBackend;
 import wartech.campaign.CampaignSave;
 import wartech.core.Display;
 import wartech.core.KeyCode;
@@ -91,6 +96,9 @@ public final class BrowserApp {
     @JSBody(script = "return document.hidden;")
     private static native boolean documentHidden();
 
+    @JSBody(params = {"id", "e"}, script = "var el = document.getElementById(id); return !!el && el.contains(e.target);")
+    private static native boolean eventInside(String id, JSObject e);
+
     @JSBody(params = "msg", script = "console.error(msg);")
     private static native void consoleError(String msg);
 
@@ -124,6 +132,12 @@ public final class BrowserApp {
         }
         loadSavedCampaign();
         bindButtons();
+        try {
+            initAudio();
+        } catch (RuntimeException | Error e) {
+            // Sound is optional: a failure here must never stop the game from starting.
+            consoleError("Audio disabled: " + e);
+        }
         bindMouse();
         bindTouch();
         bindWheel();
@@ -145,6 +159,7 @@ public final class BrowserApp {
                 double dt = (now - lastTime) / 1000.0;
                 lastTime = now;
                 WarTech.wasm_update(dt);
+                AudioEngine.tick(dt);
                 autoSaveCampaign();
                 frameCount++;
                 if (now - lastFpsTime >= 500) {
@@ -471,11 +486,139 @@ public final class BrowserApp {
         WarTech.wasm_release_input();
     }
 
+    private static final String KEY_VOL_MUSIC = "wartech.vol.music";
+    private static final String KEY_VOL_SFX = "wartech.vol.sfx";
+    private static final String KEY_VOL_AMBIENCE = "wartech.vol.ambience";
+    private static final String KEY_MUTED = "wartech.muted";
+
+    private static HTMLElement btnSound;
+    private static HTMLElement soundPanel;
+    private static boolean audioUnlockBound = false;
+
+    private static Storage safeStorage() {
+        try {
+            return Storage.getLocalStorage();
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private static void saveSetting(String key, String value) {
+        try {
+            Storage storage = safeStorage();
+            if (storage != null) storage.setItem(key, value);
+        } catch (RuntimeException ignored) {
+            // Storage unavailable (private mode, quota); volumes just won't persist.
+        }
+    }
+
+    private static String loadSetting(String key) {
+        try {
+            Storage storage = safeStorage();
+            return storage == null ? null : storage.getItem(key);
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    private static HTMLInputElement input(String id) {
+        return (HTMLInputElement) document.getElementById(id);
+    }
+
+    private static void initAudio() {
+        AudioEngine.install(new WebAudioBackend(), (long) Performance.now() ^ 0x5DEECE66DL);
+        AudioEngine audio = AudioEngine.get();
+
+        audio.setMusicVolume(AudioSettings.parse(loadSetting(KEY_VOL_MUSIC), AudioSettings.DEFAULT_MUSIC));
+        audio.setSfxVolume(AudioSettings.parse(loadSetting(KEY_VOL_SFX), AudioSettings.DEFAULT_SFX));
+        audio.setAmbienceVolume(AudioSettings.parse(loadSetting(KEY_VOL_AMBIENCE), AudioSettings.DEFAULT_AMBIENCE));
+        audio.setMuted("1".equals(loadSetting(KEY_MUTED)));
+
+        btnSound = document.getElementById("btnSound");
+        soundPanel = document.getElementById("soundPanel");
+
+        bindSlider("volMusic", "volMusicVal", audio.settings().music, v -> {
+            audio.setMusicVolume(v);
+            saveSetting(KEY_VOL_MUSIC, String.valueOf(v));
+        });
+        bindSlider("volSfx", "volSfxVal", audio.settings().sfx, v -> {
+            audio.setSfxVolume(v);
+            saveSetting(KEY_VOL_SFX, String.valueOf(v));
+        });
+        bindSlider("volAmbience", "volAmbienceVal", audio.settings().ambience, v -> {
+            audio.setAmbienceVolume(v);
+            saveSetting(KEY_VOL_AMBIENCE, String.valueOf(v));
+        });
+
+        HTMLInputElement mute = input("soundMute");
+        if (mute != null) {
+            mute.setChecked(audio.settings().muted);
+            mute.addEventListener("change", (Event _) -> {
+                audio.setMuted(mute.isChecked());
+                saveSetting(KEY_MUTED, mute.isChecked() ? "1" : "0");
+                updateSoundIcon();
+                mute.blur();
+            });
+        }
+        updateSoundIcon();
+
+        if (btnSound != null && soundPanel != null) {
+            btnSound.onClick(_ -> {
+                boolean open = !soundPanel.getClassList().contains("open");
+                if (open) soundPanel.getClassList().add("open"); else soundPanel.getClassList().remove("open");
+                btnSound.setAttribute("aria-expanded", String.valueOf(open));
+                btnSound.blur();
+            });
+            Window.current().addEventListener("pointerdown", (Event e) -> {
+                if (soundPanel.getClassList().contains("open")
+                    && !eventInside("soundPanel", e) && !eventInside("btnSound", e)) {
+                    soundPanel.getClassList().remove("open");
+                    btnSound.setAttribute("aria-expanded", "false");
+                }
+            });
+        }
+
+        // Browsers only allow audio after a user gesture.
+        if (!audioUnlockBound) {
+            audioUnlockBound = true;
+            Window window = Window.current();
+            window.addEventListener("pointerdown", (Event _) -> audio.unlock());
+            window.addEventListener("keydown", (Event _) -> audio.unlock());
+        }
+    }
+
+    private interface VolumeSink {
+        void set(double v);
+    }
+
+    private static void bindSlider(String sliderId, String valueId, double initial, VolumeSink sink) {
+        HTMLInputElement slider = input(sliderId);
+        HTMLElement label = document.getElementById(valueId);
+        if (slider == null) return;
+        int pct = (int) Math.round(initial * 100.0);
+        slider.setValue(String.valueOf(pct));
+        if (label != null) label.setInnerText(String.valueOf(pct));
+        slider.addEventListener("input", (Event _) -> {
+            double v = AudioSettings.fromPercent(slider.getValue());
+            if (label != null) label.setInnerText(String.valueOf((int) Math.round(v * 100.0)));
+            sink.set(v);
+        });
+    }
+
+    private static void updateSoundIcon() {
+        if (btnSound == null) return;
+        AudioEngine audio = AudioEngine.get();
+        boolean muted = audio != null && audio.settings().muted;
+        btnSound.setInnerHTML(muted ? "&#128263;" : "&#128266;");
+    }
+
     private static void bindWindowEvents() {
         Window window = Window.current();
         window.addEventListener("blur", (Event _) -> releaseAllInput());
         document.addEventListener("visibilitychange", (Event _) -> {
             if (documentHidden()) releaseAllInput();
+            AudioEngine audio = AudioEngine.get();
+            if (audio != null) audio.setSuspended(documentHidden());
         });
         window.addEventListener("resize", (Event _) -> rectValid = false);
         window.addEventListener("scroll", (Event _) -> rectValid = false, true);

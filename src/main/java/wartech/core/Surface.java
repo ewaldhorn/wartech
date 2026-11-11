@@ -38,7 +38,8 @@ public final class Surface {
     }
 
     public void present() {
-        if (ctx == null) return;
+        if (ctx == null)
+            return;
         ensureFrame();
         frameWords.set(Memory.HEAP);
         ctx.putImageData(frame, 0, 0);
@@ -61,7 +62,8 @@ public final class Surface {
         int y1 = Math.min(height, y + h);
         int span = x1 - x0;
         int spanH = y1 - y0;
-        if (span <= 0 || spanH <= 0) return;
+        if (span <= 0 || spanH <= 0)
+            return;
 
         for (int row = y0; row < y1; row++) {
             Memory.fill32(base + (row * width + x0) * 4, span, color);
@@ -81,10 +83,17 @@ public final class Surface {
             if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
                 Memory.put32(base + (cy * width + cx) * 4, color);
             }
-            if (cx == x1 && cy == y1) break;
+            if (cx == x1 && cy == y1)
+                break;
             int e2 = 2 * err;
-            if (e2 >= dy) { err += dy; cx += sx; }
-            if (e2 <= dx) { err += dx; cy += sy; }
+            if (e2 >= dy) {
+                err += dy;
+                cx += sx;
+            }
+            if (e2 <= dx) {
+                err += dx;
+                cy += sy;
+            }
         }
     }
 }

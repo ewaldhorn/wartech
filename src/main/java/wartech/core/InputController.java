@@ -49,7 +49,7 @@ public class InputController {
 
         // Minimap
         if (x >= Renderer.MINIMAP_X && x < Renderer.MINIMAP_X + Renderer.MINIMAP_SIZE &&
-            y >= Renderer.MINIMAP_Y && y < Renderer.MINIMAP_Y + Renderer.MINIMAP_SIZE) {
+                y >= Renderer.MINIMAP_Y && y < Renderer.MINIMAP_Y + Renderer.MINIMAP_SIZE) {
             double scale = (double) Renderer.MINIMAP_SIZE / game.map.width;
             double wx = (x - Renderer.MINIMAP_X) / scale * GameMap.TILE_SIZE;
             double wy = (y - Renderer.MINIMAP_Y) / scale * GameMap.TILE_SIZE;
@@ -67,7 +67,7 @@ public class InputController {
             return;
         }
 
-        // Sidebar 
+        // Sidebar
         if (x >= Renderer.SIDEBAR_X) {
             handleSidebarClick(x, y, button);
             return;
@@ -87,7 +87,8 @@ public class InputController {
                 }
             } else {
                 if (x >= objX && x < objX + Renderer.OBJ_BADGE_W && y >= objY && y < objY + Renderer.OBJ_BADGE_H) {
-                    if (button == MouseButton.LEFT) game.toggleObjectives();
+                    if (button == MouseButton.LEFT)
+                        game.toggleObjectives();
                     return;
                 }
             }
@@ -126,7 +127,7 @@ public class InputController {
                     game.placingBuilding = null;
                 } else {
                     game.statusToast = game.map.buildRejection(gtx, gty, game.placingBuilding, true,
-                        game.buildings, game.buildingCount, game.units, game.unitCount).label();
+                            game.buildings, game.buildingCount, game.units, game.unitCount).label();
                 }
                 return;
             }
@@ -143,14 +144,17 @@ public class InputController {
         }
     }
 
-
     public void onMouseUp(int x, int y, int button) {
         if (button == MouseButton.LEFT && game.isDragging) {
             game.isDragging = false;
-            if (x > Renderer.VIEW_WIDTH - 1) x = Renderer.VIEW_WIDTH - 1;
-            if (x < 0) x = 0;
-            if (y > Renderer.SCREEN_HEIGHT - 1) y = Renderer.SCREEN_HEIGHT - 1;
-            if (y < 0) y = 0;
+            if (x > Renderer.VIEW_WIDTH - 1)
+                x = Renderer.VIEW_WIDTH - 1;
+            if (x < 0)
+                x = 0;
+            if (y > Renderer.SCREEN_HEIGHT - 1)
+                y = Renderer.SCREEN_HEIGHT - 1;
+            if (y < 0)
+                y = 0;
             int x0 = Math.min(game.dragStartX, x);
             int y0 = Math.min(game.dragStartY, y);
             int x1 = Math.max(game.dragStartX, x);
@@ -170,8 +174,10 @@ public class InputController {
                 double bestDist = 69.0 / game.camera.zoom;
                 for (int i = 0; i < game.unitCount; i++) {
                     var u = game.units[i];
-                    if (u.isDestroyed()) continue;
-                    if (u.faction != Faction.PLAYER && !game.map.visibleAt(u.x, u.y)) continue;
+                    if (u.isDestroyed())
+                        continue;
+                    if (u.faction != Faction.PLAYER && !game.map.visibleAt(u.x, u.y))
+                        continue;
                     double dist = Math.sqrt((u.x - wx0) * (u.x - wx0) + (u.y - wy0) * (u.y - wy0));
                     if (dist <= u.type.radius + clickTol && dist < bestDist) {
                         bestDist = dist;
@@ -196,8 +202,10 @@ public class InputController {
                 Building clickedBuilding = null;
                 for (int i = 0; i < game.buildingCount; i++) {
                     var b = game.buildings[i];
-                    if (b.isDestroyed()) continue;
-                    if (b.faction != Faction.PLAYER && !game.map.exploredAt(b.getCenterX(), b.getCenterY())) continue;
+                    if (b.isDestroyed())
+                        continue;
+                    if (b.faction != Faction.PLAYER && !game.map.exploredAt(b.getCenterX(), b.getCenterY()))
+                        continue;
                     if (b.containsWorldPoint(wx0, wy0)) {
                         clickedBuilding = b;
                         break;
@@ -270,9 +278,10 @@ public class InputController {
 
     private void confirmSellSelectedBuilding() {
         Building b = game.selectedBuilding;
-        if (b == null || b.isDestroyed()) return;
+        if (b == null || b.isDestroyed())
+            return;
         boolean armed = pendingSell == b && game.gameTime >= pendingSellAt
-            && game.gameTime - pendingSellAt <= SELL_CONFIRM_WINDOW;
+                && game.gameTime - pendingSellAt <= SELL_CONFIRM_WINDOW;
         if (armed) {
             pendingSell = null;
             game.sellSelectedBuilding();
@@ -324,11 +333,11 @@ public class InputController {
         }
     }
 
-
     public void handleBriefingClick(int x, int y, int button) {
-        if (button != MouseButton.LEFT) return;
+        if (button != MouseButton.LEFT)
+            return;
         int bx = Renderer.BRIEFING_X;
-        int by = Renderer.BRIEFING_Y;  // not used yet, but we will need it when we fix fonts
+        int by = Renderer.BRIEFING_Y; // not used yet, but we will need it when we fix fonts
 
         // 1. Theater Navigation Tabs (Act I / Act II / Act III)
         int theaterW = 256;
@@ -390,7 +399,6 @@ public class InputController {
         }
     }
 
-
     public void handleSidebarClick(int x, int y, int button) {
         // Zoom Bar controls below minimap: [ - ] 50% [ + ] (y: 252 - 274)
         if (y >= Renderer.ZOOM_BAR_Y0 && y < Renderer.ZOOM_BAR_Y1) {
@@ -400,9 +408,12 @@ public class InputController {
                 } else if (x >= Renderer.ZOOM_PLUS_X0 && x < Renderer.ZOOM_PLUS_X1) {
                     game.zoomIn();
                 } else if (x >= Renderer.ZOOM_MODE_X0 && x < Renderer.ZOOM_MODE_X1) {
-                    if (game.camera.zoom < 0.45) game.camera.setZoom(Camera.ZOOM_DEFAULT);
-                    else if (game.camera.zoom < 0.95) game.camera.setZoom(Camera.ZOOM_MAX);
-                    else game.camera.setZoom(Camera.ZOOM_MIN);
+                    if (game.camera.zoom < 0.45)
+                        game.camera.setZoom(Camera.ZOOM_DEFAULT);
+                    else if (game.camera.zoom < 0.95)
+                        game.camera.setZoom(Camera.ZOOM_MAX);
+                    else
+                        game.camera.setZoom(Camera.ZOOM_MIN);
                     game.statusToast = "ZOOM: " + game.camera.getZoomPercent() + "%";
                 }
             }
@@ -464,9 +475,9 @@ public class InputController {
         }
     }
 
-
     public void handleInspectorClick(int x, int y, int button) {
-        if (button != MouseButton.LEFT) return;
+        if (button != MouseButton.LEFT)
+            return;
         if (game.selectedUnit != null && game.selectedUnit.faction == Faction.PLAYER) {
             if (x >= Renderer.INSPECTOR_BTN1_X0 && x < Renderer.INSPECTOR_BTN1_X1) {
                 orders.stopSelectedUnits();
@@ -487,7 +498,8 @@ public class InputController {
                     if (game.selectedBuilding.hasRallyPoint) {
                         game.selectedBuilding.clearRallyPoint();
                         game.statusToast = game.selectedBuilding.type.displayNameUpper + " RALLY POINT CLEARED";
-                        game.spawnEffect(Effect.TYPE_EXPLOSION, game.selectedBuilding.getCenterX(), game.selectedBuilding.getCenterY(), 0.15, 8.0);
+                        game.spawnEffect(Effect.TYPE_EXPLOSION, game.selectedBuilding.getCenterX(),
+                                game.selectedBuilding.getCenterY(), 0.15, 8.0);
                     } else {
                         game.statusToast = "RIGHT-CLICK MAP TO SET RALLY POINT";
                     }
@@ -503,7 +515,6 @@ public class InputController {
             }
         }
     }
-
 
     public void setKey(int code, boolean isDown) {
         if (code == KeyCode.CONTROL) {
@@ -585,7 +596,8 @@ public class InputController {
             case KeyCode.RIGHT, KeyCode.D -> game.keyRight = isDown;
             case KeyCode.UP, KeyCode.W -> game.keyUp = isDown;
             case KeyCode.DOWN, KeyCode.S -> game.keyDown = isDown;
-            default -> { }
+            default -> {
+            }
         }
     }
 
@@ -613,7 +625,8 @@ public class InputController {
         int count = 0;
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction != Faction.PLAYER) continue;
+            if (u.isDestroyed() || u.faction != Faction.PLAYER)
+                continue;
             if (u.selected) {
                 u.group = digit;
                 count++;
@@ -630,7 +643,8 @@ public class InputController {
         double sumY = 0.0;
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction != Faction.PLAYER || u.group != digit) continue;
+            if (u.isDestroyed() || u.faction != Faction.PLAYER || u.group != digit)
+                continue;
             count++;
             sumX += u.x;
             sumY += u.y;
@@ -661,11 +675,14 @@ public class InputController {
     }
 
     private boolean selectionMatchesGroup(int digit) {
-        if (game.selectedBuilding != null) return false;
+        if (game.selectedBuilding != null)
+            return false;
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction != Faction.PLAYER) continue;
-            if (u.selected != (u.group == digit)) return false;
+            if (u.isDestroyed() || u.faction != Faction.PLAYER)
+                continue;
+            if (u.selected != (u.group == digit))
+                return false;
         }
         return true;
     }

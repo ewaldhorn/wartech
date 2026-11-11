@@ -2,6 +2,8 @@ package wartech.building;
 
 // Economy, construction queues, building placement, and refund logic
 
+import wartech.audio.AudioEngine;
+import wartech.audio.Sfx;
 import wartech.combat.Effect;
 import wartech.core.Faction;
 import wartech.core.WarTech;
@@ -158,6 +160,7 @@ public class ProductionSystem {
             return false;
         }
         game.spawnEffect(Effect.TYPE_MUZZLE, spawnX, spawnY, 0.25, 21.0);
+        AudioEngine.playSfx(Sfx.UNIT_READY, spawnX, spawnY);
 
         if (factory.hasRallyPoint) {
             double scatterX = factory.rallyX + game.simRng.jitter(12.0);

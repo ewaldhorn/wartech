@@ -35,7 +35,8 @@ public final class UnitOrders {
     }
 
     public void issueRightClickOrder(double worldX, double worldY) {
-        if (handlePlacementOrRally(worldX, worldY)) return;
+        if (handlePlacementOrRally(worldX, worldY))
+            return;
         ResolvedTargets targets = resolveOrderTargets(worldX, worldY);
         int groupMoveCount = planFormationMove(targets, worldX, worldY);
         boolean anyCollectorOrdered = applySpecialOrders(targets, worldX, worldY);
@@ -48,11 +49,13 @@ public final class UnitOrders {
             return true;
         }
 
-        if (game.selectedBuilding != null && game.selectedBuilding.faction == Faction.PLAYER && game.selectedBuilding.type.canProduceUnits()) {
+        if (game.selectedBuilding != null && game.selectedBuilding.faction == Faction.PLAYER
+                && game.selectedBuilding.type.canProduceUnits()) {
             if (game.selectedBuilding.containsWorldPoint(worldX, worldY)) {
                 game.selectedBuilding.clearRallyPoint();
                 game.statusToast = game.selectedBuilding.type.displayNameUpper + " RALLY POINT CLEARED";
-                game.spawnEffect(Effect.TYPE_EXPLOSION, game.selectedBuilding.getCenterX(), game.selectedBuilding.getCenterY(), 0.15, 8.0);
+                game.spawnEffect(Effect.TYPE_EXPLOSION, game.selectedBuilding.getCenterX(),
+                        game.selectedBuilding.getCenterY(), 0.15, 8.0);
             } else {
                 double rx = Math.clamp(worldX, 16.0, game.map.width * GameMap.TILE_SIZE - 16.0);
                 double ry = Math.clamp(worldY, 16.0, game.map.height * GameMap.TILE_SIZE - 16.0);
@@ -73,7 +76,8 @@ public final class UnitOrders {
         Unit friendlyTroop = findFriendlyTroop(worldX, worldY);
         Building friendlyBuilding = findFriendlyBuilding(worldX, worldY);
         Building friendlyRefinery = (targetUnit == null && targetBuilding == null)
-            ? findFriendlyRefinery(worldX, worldY) : null;
+                ? findFriendlyRefinery(worldX, worldY)
+                : null;
 
         int clickTx = (int) (worldX / GameMap.TILE_SIZE);
         int clickTy = (int) (worldY / GameMap.TILE_SIZE);
@@ -94,8 +98,8 @@ public final class UnitOrders {
         }
 
         return new ResolvedTargets(targetUnit, targetBuilding, friendlyVehicle,
-            friendlyTroop, friendlyBuilding, friendlyRefinery, clickedCrystals,
-            crystalTargetX, crystalTargetY);
+                friendlyTroop, friendlyBuilding, friendlyRefinery, clickedCrystals,
+                crystalTargetX, crystalTargetY);
     }
 
     private Unit findAttackTargetUnit(double worldX, double worldY) {
@@ -103,11 +107,15 @@ public final class UnitOrders {
         double bestTargetDistSq = Double.MAX_VALUE;
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction == Faction.PLAYER) continue;
-            if (!game.map.visibleAt(u.x, u.y)) continue;
+            if (u.isDestroyed() || u.faction == Faction.PLAYER)
+                continue;
+            if (!game.map.visibleAt(u.x, u.y))
+                continue;
             double distSq = (u.x - worldX) * (u.x - worldX) + (u.y - worldY) * (u.y - worldY);
-            if (distSq > orderHaloSq(u.type.radius) || distSq >= bestTargetDistSq) continue;
-            if (u.faction == Faction.NEUTRAL && !game.isDangerousTarget(Faction.PLAYER, u)) continue;
+            if (distSq > orderHaloSq(u.type.radius) || distSq >= bestTargetDistSq)
+                continue;
+            if (u.faction == Faction.NEUTRAL && !game.isDangerousTarget(Faction.PLAYER, u))
+                continue;
             bestTargetDistSq = distSq;
             targetUnit = u;
         }
@@ -117,8 +125,10 @@ public final class UnitOrders {
     private Building findAttackTargetBuilding(double worldX, double worldY) {
         for (int i = 0; i < game.buildingCount; i++) {
             var b = game.buildings[i];
-            if (b.isDestroyed() || !game.isRivalBuilding(Faction.PLAYER, b)) continue;
-            if (!game.map.exploredAt(b.getCenterX(), b.getCenterY())) continue;
+            if (b.isDestroyed() || !game.isRivalBuilding(Faction.PLAYER, b))
+                continue;
+            if (!game.map.exploredAt(b.getCenterX(), b.getCenterY()))
+                continue;
             if (b.containsWorldPoint(worldX, worldY)) {
                 return b;
             }
@@ -131,9 +141,11 @@ public final class UnitOrders {
         double bestVehicleDistSq = Double.MAX_VALUE;
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction != Faction.PLAYER || !u.type.isVehicle()) continue;
+            if (u.isDestroyed() || u.faction != Faction.PLAYER || !u.type.isVehicle())
+                continue;
             double distSq = (u.x - worldX) * (u.x - worldX) + (u.y - worldY) * (u.y - worldY);
-            if (distSq > orderHaloSq(u.type.radius) || distSq >= bestVehicleDistSq) continue;
+            if (distSq > orderHaloSq(u.type.radius) || distSq >= bestVehicleDistSq)
+                continue;
             bestVehicleDistSq = distSq;
             friendlyVehicle = u;
         }
@@ -145,9 +157,11 @@ public final class UnitOrders {
         double bestTroopDistSq = Double.MAX_VALUE;
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || u.faction != Faction.PLAYER || !u.type.isInfantry()) continue;
+            if (u.isDestroyed() || u.faction != Faction.PLAYER || !u.type.isInfantry())
+                continue;
             double distSq = (u.x - worldX) * (u.x - worldX) + (u.y - worldY) * (u.y - worldY);
-            if (distSq > orderHaloSq(u.type.radius) || distSq >= bestTroopDistSq) continue;
+            if (distSq > orderHaloSq(u.type.radius) || distSq >= bestTroopDistSq)
+                continue;
             bestTroopDistSq = distSq;
             friendlyTroop = u;
         }
@@ -157,7 +171,8 @@ public final class UnitOrders {
     private Building findFriendlyBuilding(double worldX, double worldY) {
         for (int i = 0; i < game.buildingCount; i++) {
             var b = game.buildings[i];
-            if (b.isDestroyed() || b.faction != Faction.PLAYER) continue;
+            if (b.isDestroyed() || b.faction != Faction.PLAYER)
+                continue;
             if (b.containsWorldPoint(worldX, worldY)) {
                 return b;
             }
@@ -168,7 +183,8 @@ public final class UnitOrders {
     private Building findFriendlyRefinery(double worldX, double worldY) {
         for (int i = 0; i < game.buildingCount; i++) {
             var b = game.buildings[i];
-            if (b.isDestroyed() || b.faction != Faction.PLAYER || b.type != BuildingType.REFINERY) continue;
+            if (b.isDestroyed() || b.faction != Faction.PLAYER || b.type != BuildingType.REFINERY)
+                continue;
             if (b.containsWorldPoint(worldX, worldY)) {
                 return b;
             }
@@ -183,19 +199,28 @@ public final class UnitOrders {
         double maxRadius = 0;
         for (int i = 0; i < game.unitCount && groupMoveCount < WarTech.MAX_UNITS; i++) {
             var u = game.units[i];
-            if (u == null || u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER) continue;
+            if (u == null || u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER)
+                continue;
 
-            if (u.type == UnitType.MEDIC && targets.friendlyTroop() != null && targets.friendlyTroop() != u) continue;
-            if (u.type == UnitType.MECHANIC && (targets.friendlyVehicle() != null || targets.friendlyBuilding() != null)) continue;
-            if (targets.targetUnit() != null && u.type != UnitType.COLLECTOR) continue;
-            if (targets.targetBuilding() != null && u.type != UnitType.COLLECTOR) continue;
-            if (targets.friendlyRefinery() != null && u.type == UnitType.COLLECTOR) continue;
-            if (targets.clickedCrystals() && u.type == UnitType.COLLECTOR) continue;
+            if (u.type == UnitType.MEDIC && targets.friendlyTroop() != null && targets.friendlyTroop() != u)
+                continue;
+            if (u.type == UnitType.MECHANIC
+                    && (targets.friendlyVehicle() != null || targets.friendlyBuilding() != null))
+                continue;
+            if (targets.targetUnit() != null && u.type != UnitType.COLLECTOR)
+                continue;
+            if (targets.targetBuilding() != null && u.type != UnitType.COLLECTOR)
+                continue;
+            if (targets.friendlyRefinery() != null && u.type == UnitType.COLLECTOR)
+                continue;
+            if (targets.clickedCrystals() && u.type == UnitType.COLLECTOR)
+                continue;
 
             moveGroupUnits[groupMoveCount] = u;
             sumX += u.x;
             sumY += u.y;
-            if (u.type.radius > maxRadius) maxRadius = u.type.radius;
+            if (u.type.radius > maxRadius)
+                maxRadius = u.type.radius;
             groupMoveCount++;
         }
 
@@ -255,7 +280,8 @@ public final class UnitOrders {
                 int bestUnitIdx = -1;
                 double bestDistSq = Double.MAX_VALUE;
                 for (int u = 0; u < groupMoveCount; u++) {
-                    if (unitAssigned[u]) continue;
+                    if (unitAssigned[u])
+                        continue;
                     var unit = moveGroupUnits[u];
                     double ddx = unit.x - sx;
                     double ddy = unit.y - sy;
@@ -281,7 +307,8 @@ public final class UnitOrders {
         boolean orderPinged = false;
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u == null || u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER) continue;
+            if (u == null || u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER)
+                continue;
 
             if (u.type == UnitType.MEDIC && targets.friendlyTroop() != null && targets.friendlyTroop() != u) {
                 u.hasHuntWaypoint = false;
@@ -289,23 +316,30 @@ public final class UnitOrders {
                 game.statusToast = "MEDIC: ATTENDING INJURED TROOP";
                 if (!orderPinged) {
                     orderPinged = true;
-                    game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyTroop().x, targets.friendlyTroop().y, 0.5, 18.0);
+                    game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyTroop().x, targets.friendlyTroop().y, 0.5,
+                            18.0);
                 }
-            } else if (u.type == UnitType.MECHANIC && (targets.friendlyVehicle() != null || targets.friendlyBuilding() != null)) {
+            } else if (u.type == UnitType.MECHANIC
+                    && (targets.friendlyVehicle() != null || targets.friendlyBuilding() != null)) {
                 u.hasHuntWaypoint = false;
-                if (targets.friendlyVehicle() != null && targets.friendlyVehicle().hp < targets.friendlyVehicle().maxHp) {
+                if (targets.friendlyVehicle() != null
+                        && targets.friendlyVehicle().hp < targets.friendlyVehicle().maxHp) {
                     u.repairUnit(targets.friendlyVehicle());
                     game.statusToast = "MECHANIC: REPAIRING VEHICLE";
                     if (!orderPinged) {
                         orderPinged = true;
-                        game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyVehicle().x, targets.friendlyVehicle().y, 0.5, 18.0);
+                        game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyVehicle().x,
+                                targets.friendlyVehicle().y, 0.5, 18.0);
                     }
-                } else if (targets.friendlyBuilding() != null && targets.friendlyBuilding().hp < targets.friendlyBuilding().maxHp && !targets.friendlyBuilding().constructing) {
+                } else if (targets.friendlyBuilding() != null
+                        && targets.friendlyBuilding().hp < targets.friendlyBuilding().maxHp
+                        && !targets.friendlyBuilding().constructing) {
                     u.repairBuilding(targets.friendlyBuilding());
                     game.statusToast = "MECHANIC: REPAIRING STRUCTURE";
                     if (!orderPinged) {
                         orderPinged = true;
-                        game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyBuilding().getCenterX(), targets.friendlyBuilding().getCenterY(), 0.5, 18.0);
+                        game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyBuilding().getCenterX(),
+                                targets.friendlyBuilding().getCenterY(), 0.5, 18.0);
                     }
                 } else {
                     u.moveTo(worldX, worldY);
@@ -323,10 +357,12 @@ public final class UnitOrders {
                     u.huntStationY = u.y;
                     u.hasHuntStation = true;
                 }
-                game.statusToast = (u.stance == Stance.HUNT) ? "HUNTING: ENGAGING HOSTILE UNIT" : "ATTACKING HOSTILE UNIT";
+                game.statusToast = (u.stance == Stance.HUNT) ? "HUNTING: ENGAGING HOSTILE UNIT"
+                        : "ATTACKING HOSTILE UNIT";
                 if (!attackPinged) {
                     attackPinged = true;
-                    game.spawnEffect(Effect.TYPE_ORDER_ATTACK, targets.targetUnit().x, targets.targetUnit().y, 0.6, 22.0);
+                    game.spawnEffect(Effect.TYPE_ORDER_ATTACK, targets.targetUnit().x, targets.targetUnit().y, 0.6,
+                            22.0);
                 }
             } else if (targets.targetBuilding() != null && u.type != UnitType.COLLECTOR) {
                 u.hasHuntWaypoint = false;
@@ -336,10 +372,12 @@ public final class UnitOrders {
                     u.huntStationY = u.y;
                     u.hasHuntStation = true;
                 }
-                game.statusToast = (u.stance == Stance.HUNT) ? "HUNTING: ENGAGING ENEMY STRUCTURE" : "ATTACKING ENEMY STRUCTURE";
+                game.statusToast = (u.stance == Stance.HUNT) ? "HUNTING: ENGAGING ENEMY STRUCTURE"
+                        : "ATTACKING ENEMY STRUCTURE";
                 if (!attackPinged) {
                     attackPinged = true;
-                    game.spawnEffect(Effect.TYPE_ORDER_ATTACK, targets.targetBuilding().getCenterX(), targets.targetBuilding().getCenterY(), 0.6, 22.0);
+                    game.spawnEffect(Effect.TYPE_ORDER_ATTACK, targets.targetBuilding().getCenterX(),
+                            targets.targetBuilding().getCenterY(), 0.6, 22.0);
                 }
             } else if (targets.friendlyRefinery() != null && u.isHarvester()) {
                 u.hasHuntWaypoint = false;
@@ -350,7 +388,8 @@ public final class UnitOrders {
                 anyCollectorOrdered = true;
                 if (!orderPinged) {
                     orderPinged = true;
-                    game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyRefinery().getCenterX(), targets.friendlyRefinery().getCenterY() + 53.0, 0.5, 18.0);
+                    game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.friendlyRefinery().getCenterX(),
+                            targets.friendlyRefinery().getCenterY() + 53.0, 0.5, 18.0);
                 }
             } else if (targets.clickedCrystals() && u.isHarvester()) {
                 u.hasHuntWaypoint = false;
@@ -363,7 +402,8 @@ public final class UnitOrders {
                 anyCollectorOrdered = true;
                 if (!orderPinged) {
                     orderPinged = true;
-                    game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.crystalTargetX(), targets.crystalTargetY(), 0.5, 18.0);
+                    game.spawnEffect(Effect.TYPE_ORDER_MOVE, targets.crystalTargetX(), targets.crystalTargetY(), 0.5,
+                            18.0);
                 }
             }
         }
@@ -402,7 +442,7 @@ public final class UnitOrders {
             } else {
                 u.hasHuntWaypoint = false;
             }
-            moveGroupUnits[k] = null; 
+            moveGroupUnits[k] = null;
         }
 
         if (!anyCollectorOrdered && groupMoveCount > 0) {
@@ -419,7 +459,8 @@ public final class UnitOrders {
     public void stopSelectedUnits() {
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER) continue;
+            if (u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER)
+                continue;
             u.stance = Stance.DEFAULT;
             u.stop();
         }
@@ -433,7 +474,8 @@ public final class UnitOrders {
         }
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER) continue;
+            if (u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER)
+                continue;
             u.stance = Stance.GUARD;
             u.guardAnchorX = u.x;
             u.guardAnchorY = u.y;
@@ -458,8 +500,10 @@ public final class UnitOrders {
         }
         for (int i = 0; i < game.unitCount; i++) {
             var u = game.units[i];
-            if (u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER) continue;
-            if (u.type == UnitType.COLLECTOR) continue;
+            if (u.isDestroyed() || !u.selected || u.faction != Faction.PLAYER)
+                continue;
+            if (u.type == UnitType.COLLECTOR)
+                continue;
             u.stance = Stance.HUNT;
             u.huntStationX = u.x;
             u.huntStationY = u.y;
@@ -472,9 +516,11 @@ public final class UnitOrders {
     }
 
     public void sendCollectorToHarvest(Unit u) {
-        if (u.isDestroyed() || u.harvester == null) return;
+        if (u.isDestroyed() || u.harvester == null)
+            return;
         var h = u.harvester;
-        if (h.harvestRetryTimer > 0.0) return;
+        if (h.harvestRetryTimer > 0.0)
+            return;
         h.autoCollect = true;
         h.returningToRefinery = false;
 
@@ -513,7 +559,8 @@ public final class UnitOrders {
             h.harvestTargetY = (bestTy + 0.5) * GameMap.TILE_SIZE;
             u.moveTo(h.harvestTargetX, h.harvestTargetY);
             h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
-            if (u.selected) game.statusToast = "COLLECTOR HARVESTING CRYSTALS";
+            if (u.selected)
+                game.statusToast = "COLLECTOR HARVESTING CRYSTALS";
         } else {
             if (h.hasCargo()) {
                 h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
@@ -524,13 +571,16 @@ public final class UnitOrders {
                 }
             } else {
                 h.autoCollect = false;
-                if (u.selected) game.statusToast = "CRYSTAL FIELDS DEPLETED";
+                if (u.selected)
+                    game.statusToast = "CRYSTAL FIELDS DEPLETED";
             }
         }
     }
 
     public void toggleCollectSelectedCollector() {
-        if (game.selectedUnit == null || game.selectedUnit.harvester == null || game.selectedUnit.faction != Faction.PLAYER) return;
+        if (game.selectedUnit == null || game.selectedUnit.harvester == null
+                || game.selectedUnit.faction != Faction.PLAYER)
+            return;
         var h = game.selectedUnit.harvester;
         h.autoCollect = true;
         if (h.hasCargo()) {
@@ -553,7 +603,9 @@ public final class UnitOrders {
     }
 
     public void toggleRepairSelectedMechanic() {
-        if (game.selectedUnit == null || game.selectedUnit.repairer == null || game.selectedUnit.faction != Faction.PLAYER) return;
+        if (game.selectedUnit == null || game.selectedUnit.repairer == null
+                || game.selectedUnit.faction != Faction.PLAYER)
+            return;
         var r = game.selectedUnit.repairer;
         r.autoRepair = !r.autoRepair;
         if (!r.autoRepair) {

@@ -5,6 +5,8 @@ package wartech.core;
 
 import wartech.ai.Difficulty;
 import wartech.ai.EnemyAI;
+import wartech.audio.AudioEngine;
+import wartech.audio.Sfx;
 import wartech.building.Building;
 import wartech.building.BuildingType;
 import wartech.building.ProductionSystem;
@@ -72,7 +74,7 @@ public class WarTech {
             projectiles[i] = new Projectile(0.0, 0.0, 0.0, 0.0, 0.0, 0, Faction.PLAYER, false, 0.0, null);
             projectiles[i].active = false;
         }
-        
+
         for (int i = 0; i < MAX_EFFECTS; i++) {
             effects[i] = new Effect(Effect.TYPE_EXPLOSION, 0.0, 0.0, 0.0, 0.0);
             effects[i].active = false;
@@ -113,26 +115,26 @@ public class WarTech {
     public int totalCreditsHarvested = 0;
 
     public static final BuildingType[] BUILD_ORDER = new BuildingType[] {
-        BuildingType.WIND_TURBINE,
-        BuildingType.REFINERY,
-        BuildingType.BARRACKS,
-        BuildingType.LIGHT_FACTORY,
-        BuildingType.HEAVY_FACTORY,
-        BuildingType.REPAIR_FACILITY,
-        BuildingType.TURRET,
-        BuildingType.RADAR,
-        BuildingType.CON_YARD
+            BuildingType.WIND_TURBINE,
+            BuildingType.REFINERY,
+            BuildingType.BARRACKS,
+            BuildingType.LIGHT_FACTORY,
+            BuildingType.HEAVY_FACTORY,
+            BuildingType.REPAIR_FACILITY,
+            BuildingType.TURRET,
+            BuildingType.RADAR,
+            BuildingType.CON_YARD
     };
 
     public static final UnitType[] UNIT_ORDER = new UnitType[] {
-        UnitType.TROOPER_RIFLE,
-        UnitType.TROOPER_MISSILE,
-        UnitType.MEDIC,
-        UnitType.MECHANIC,
-        UnitType.SCOUT_TRIKE,
-        UnitType.COMBAT_TANK,
-        UnitType.SIEGE_TANK,
-        UnitType.COLLECTOR
+            UnitType.TROOPER_RIFLE,
+            UnitType.TROOPER_MISSILE,
+            UnitType.MEDIC,
+            UnitType.MECHANIC,
+            UnitType.SCOUT_TRIKE,
+            UnitType.COMBAT_TANK,
+            UnitType.SIEGE_TANK,
+            UnitType.COLLECTOR
     };
 
     public static final int MAX_UNIT_QUEUE = 8;
@@ -181,27 +183,36 @@ public class WarTech {
     public static void wasm_update(double dt) {
         if (instance != null) {
             instance.update(dt);
+            Camera cam = instance.camera;
+            if (cam != null) {
+                AudioEngine.viewChanged(cam.x, cam.y, Camera.VIEW_WIDTH / cam.zoom, Camera.VIEW_HEIGHT / cam.zoom);
+            }
         }
     }
 
     public static void wasm_mouse_down(int x, int y, int button) {
-        if (instance != null) instance.inputController.onMouseDown(x, y, button);
+        if (instance != null)
+            instance.inputController.onMouseDown(x, y, button);
     }
 
     public static void wasm_mouse_up(int x, int y, int button) {
-        if (instance != null) instance.inputController.onMouseUp(x, y, button);
+        if (instance != null)
+            instance.inputController.onMouseUp(x, y, button);
     }
 
     public static void wasm_mouse_move(int x, int y) {
-        if (instance != null) instance.inputController.onMouseMove(x, y);
+        if (instance != null)
+            instance.inputController.onMouseMove(x, y);
     }
 
     public static void wasm_key_down(int code) {
-        if (instance != null) instance.inputController.setKey(code, true);
+        if (instance != null)
+            instance.inputController.setKey(code, true);
     }
 
     public static void wasm_key_up(int code) {
-        if (instance != null) instance.inputController.setKey(code, false);
+        if (instance != null)
+            instance.inputController.setKey(code, false);
     }
 
     public static int wasm_get_credits() {
@@ -217,22 +228,26 @@ public class WarTech {
     }
 
     public static void wasm_release_input() {
-        if (instance != null) instance.inputController.releaseInput();
+        if (instance != null)
+            instance.inputController.releaseInput();
     }
 
     public static void wasm_restart_match() {
-        if (instance == null) return;
+        if (instance == null)
+            return;
         if (instance.campaignManager != null && instance.campaignManager.campaignActive) {
             instance.campaignManager.replayMission(instance);
         } else {
             instance.startSkirmish(instance.selectedMapSize, instance.selectedDifficulty,
-                instance.startingCredits, instance.mapSeed);
+                    instance.startingCredits, instance.mapSeed);
         }
     }
 
     public static int wasm_is_campaign_active() {
-        return (instance != null && instance.campaignManager != null && instance.campaignManager.campaignActive) ? 1 : 0;
+        return (instance != null && instance.campaignManager != null && instance.campaignManager.campaignActive) ? 1
+                : 0;
     }
+
     public static int wasm_get_campaign_save() {
         return (instance != null && instance.campaignManager != null) ? instance.campaignManager.getPackedState() : 0;
     }
@@ -249,11 +264,13 @@ public class WarTech {
     }
 
     public static void wasm_zoom_in() {
-        if (instance != null) instance.zoomIn();
+        if (instance != null)
+            instance.zoomIn();
     }
 
     public static void wasm_zoom_out() {
-        if (instance != null) instance.zoomOut();
+        if (instance != null)
+            instance.zoomOut();
     }
 
     public static int wasm_get_zoom() {
@@ -262,30 +279,36 @@ public class WarTech {
 
     public void zoomIn() {
         double ax = (mouseX >= 0 && mouseX < Renderer.VIEW_WIDTH && mouseY >= 0 && mouseY < Renderer.SCREEN_HEIGHT)
-            ? mouseX : (Renderer.VIEW_WIDTH / 2.0);
+                ? mouseX
+                : (Renderer.VIEW_WIDTH / 2.0);
         double ay = (mouseX >= 0 && mouseX < Renderer.VIEW_WIDTH && mouseY >= 0 && mouseY < Renderer.SCREEN_HEIGHT)
-            ? mouseY : (Renderer.SCREEN_HEIGHT / 2.0);
+                ? mouseY
+                : (Renderer.SCREEN_HEIGHT / 2.0);
         camera.zoomIn(ax, ay);
         statusToast = "ZOOM: " + camera.getZoomPercent() + "%";
     }
 
     public void zoomOut() {
         double ax = (mouseX >= 0 && mouseX < Renderer.VIEW_WIDTH && mouseY >= 0 && mouseY < Renderer.SCREEN_HEIGHT)
-            ? mouseX : (Renderer.VIEW_WIDTH / 2.0);
+                ? mouseX
+                : (Renderer.VIEW_WIDTH / 2.0);
         double ay = (mouseX >= 0 && mouseX < Renderer.VIEW_WIDTH && mouseY >= 0 && mouseY < Renderer.SCREEN_HEIGHT)
-            ? mouseY : (Renderer.SCREEN_HEIGHT / 2.0);
+                ? mouseY
+                : (Renderer.SCREEN_HEIGHT / 2.0);
         camera.zoomOut(ax, ay);
         statusToast = "ZOOM: " + camera.getZoomPercent() + "%";
     }
 
     public boolean addBuilding(Building b) {
-        if (b == null || buildingCount >= MAX_BUILDINGS) return false;
+        if (b == null || buildingCount >= MAX_BUILDINGS)
+            return false;
         buildings[buildingCount++] = b;
         return true;
     }
 
     public boolean addUnit(Unit u) {
-        if (u == null || unitCount >= MAX_UNITS) return false;
+        if (u == null || unitCount >= MAX_UNITS)
+            return false;
         units[unitCount] = u;
         spatialGrid.insert(unitCount, u.x, u.y);
         unitCount++;
@@ -293,8 +316,9 @@ public class WarTech {
     }
 
     public boolean spawnProjectile(double sx, double sy, double tx, double ty, double speed, int damage,
-                                   Faction faction, boolean rocket, double splash, Building ignore) {
-        if (projectileCount >= MAX_PROJECTILES) return false;
+            Faction faction, boolean rocket, double splash, Building ignore) {
+        if (projectileCount >= MAX_PROJECTILES)
+            return false;
         projectiles[projectileCount++].init(sx, sy, tx, ty, speed, damage, faction, rocket, splash, ignore);
         return true;
     }
@@ -307,8 +331,20 @@ public class WarTech {
     }
 
     public void spawnEffect(byte type, double x, double y, double duration, double radius) {
+        playEffectSound(type, x, y, radius);
         if (effectCount < MAX_EFFECTS) {
             effects[effectCount++].init(type, x, y, duration, radius);
+        }
+    }
+
+    private static void playEffectSound(byte type, double x, double y, double radius) {
+        switch (type) {
+            case Effect.TYPE_EXPLOSION -> AudioEngine.playSfx(
+                    radius >= 40.0 ? Sfx.EXPLOSION_BIG : radius <= 20.0 ? Sfx.HIT : Sfx.EXPLOSION_SMALL, x, y);
+            case Effect.TYPE_ORDER_MOVE -> AudioEngine.playSfx(Sfx.ORDER_MOVE, x, y);
+            case Effect.TYPE_ORDER_ATTACK -> AudioEngine.playSfx(Sfx.ORDER_ATTACK, x, y);
+            default -> {
+            }
         }
     }
 
@@ -371,17 +407,23 @@ public class WarTech {
         this.totalCreditsHarvested = 0;
 
         // Reset game state
-        for (int i = 0; i < unitCount; i++) units[i] = null;
-        for (int i = 0; i < buildingCount; i++) buildings[i] = null;
-        for (int i = 0; i < projectileCount; i++) projectiles[i].active = false;
-        for (int i = 0; i < effectCount; i++) effects[i].active = false;
-        for (int i = 0; i < wreckCount; i++) wrecks[i].active = false;
+        for (int i = 0; i < unitCount; i++)
+            units[i] = null;
+        for (int i = 0; i < buildingCount; i++)
+            buildings[i] = null;
+        for (int i = 0; i < projectileCount; i++)
+            projectiles[i].active = false;
+        for (int i = 0; i < effectCount; i++)
+            effects[i].active = false;
+        for (int i = 0; i < wreckCount; i++)
+            wrecks[i].active = false;
         unitCount = 0;
         buildingCount = 0;
         projectileCount = 0;
         effectCount = 0;
         wreckCount = 0;
-        for (int i = 0; i < MAX_UNIT_QUEUE; i++) unitQueue[i] = null;
+        for (int i = 0; i < MAX_UNIT_QUEUE; i++)
+            unitQueue[i] = null;
         unitQueueCount = 0;
         unitBuildSpent = 0;
         selectedUnit = null;
@@ -409,22 +451,30 @@ public class WarTech {
         addBuilding(new Building(BuildingType.WIND_TURBINE, Faction.PLAYER, 12, map.height - 12));
         addBuilding(new Building(BuildingType.REFINERY, Faction.PLAYER, 12, map.height - 8));
 
-        var pCol = new Unit(UnitType.COLLECTOR, Faction.PLAYER, 14 * GameMap.TILE_SIZE, (map.height - 5) * GameMap.TILE_SIZE);
-        if (pCol.harvester != null) pCol.harvester.autoCollect = true;
+        var pCol = new Unit(UnitType.COLLECTOR, Faction.PLAYER, 14 * GameMap.TILE_SIZE,
+                (map.height - 5) * GameMap.TILE_SIZE);
+        if (pCol.harvester != null)
+            pCol.harvester.autoCollect = true;
         addUnit(pCol);
-        addUnit(new Unit(UnitType.TROOPER_RIFLE, Faction.PLAYER, 9 * GameMap.TILE_SIZE, (map.height - 7) * GameMap.TILE_SIZE));
-        addUnit(new Unit(UnitType.SCOUT_TRIKE, Faction.PLAYER, 10 * GameMap.TILE_SIZE, (map.height - 7) * GameMap.TILE_SIZE));
+        addUnit(new Unit(UnitType.TROOPER_RIFLE, Faction.PLAYER, 9 * GameMap.TILE_SIZE,
+                (map.height - 7) * GameMap.TILE_SIZE));
+        addUnit(new Unit(UnitType.SCOUT_TRIKE, Faction.PLAYER, 10 * GameMap.TILE_SIZE,
+                (map.height - 7) * GameMap.TILE_SIZE));
 
         addBuilding(new Building(BuildingType.CON_YARD, Faction.ENEMY, map.width - 14, 5));
         addBuilding(new Building(BuildingType.WIND_TURBINE, Faction.ENEMY, map.width - 10, 5));
         addBuilding(new Building(BuildingType.REFINERY, Faction.ENEMY, map.width - 10, 8));
 
-        var eCol = new Unit(UnitType.COLLECTOR, Faction.ENEMY, (map.width - 9) * GameMap.TILE_SIZE, 11 * GameMap.TILE_SIZE);
-        if (eCol.harvester != null) eCol.harvester.autoCollect = true;
+        var eCol = new Unit(UnitType.COLLECTOR, Faction.ENEMY, (map.width - 9) * GameMap.TILE_SIZE,
+                11 * GameMap.TILE_SIZE);
+        if (eCol.harvester != null)
+            eCol.harvester.autoCollect = true;
         addUnit(eCol);
-        addUnit(new Unit(UnitType.RAVAGER_TANK, Faction.ENEMY, (map.width - 12) * GameMap.TILE_SIZE, 10 * GameMap.TILE_SIZE));
+        addUnit(new Unit(UnitType.RAVAGER_TANK, Faction.ENEMY, (map.width - 12) * GameMap.TILE_SIZE,
+                10 * GameMap.TILE_SIZE));
         if (diff == Difficulty.HARD) {
-            addUnit(new Unit(UnitType.VANDAL, Faction.ENEMY, (map.width - 14) * GameMap.TILE_SIZE, 10 * GameMap.TILE_SIZE));
+            addUnit(new Unit(UnitType.VANDAL, Faction.ENEMY, (map.width - 14) * GameMap.TILE_SIZE,
+                    10 * GameMap.TILE_SIZE));
         }
 
         threatSystem.reinforcementsSpawned = 0;
@@ -446,18 +496,18 @@ public class WarTech {
     public void spawnSkirmishDefenders(Difficulty diff) {
         UnitType[] defTypes = switch (diff) {
             case EASY -> new UnitType[] {
-                UnitType.RAIDER, UnitType.RAIDER, UnitType.VANDAL
+                    UnitType.RAIDER, UnitType.RAIDER, UnitType.VANDAL
             };
             case MEDIUM -> new UnitType[] {
-                UnitType.RAIDER, UnitType.RAIDER, UnitType.RAIDER,
-                UnitType.VANDAL, UnitType.VANDAL,
-                UnitType.REAVER_BUGGY
+                    UnitType.RAIDER, UnitType.RAIDER, UnitType.RAIDER,
+                    UnitType.VANDAL, UnitType.VANDAL,
+                    UnitType.REAVER_BUGGY
             };
             case HARD -> new UnitType[] {
-                UnitType.RAIDER, UnitType.RAIDER, UnitType.RAIDER,
-                UnitType.RAIDER, UnitType.RAIDER, UnitType.RAIDER,
-                UnitType.VANDAL, UnitType.VANDAL, UnitType.VANDAL, UnitType.VANDAL,
-                UnitType.REAVER_BUGGY, UnitType.REAVER_BUGGY
+                    UnitType.RAIDER, UnitType.RAIDER, UnitType.RAIDER,
+                    UnitType.RAIDER, UnitType.RAIDER, UnitType.RAIDER,
+                    UnitType.VANDAL, UnitType.VANDAL, UnitType.VANDAL, UnitType.VANDAL,
+                    UnitType.REAVER_BUGGY, UnitType.REAVER_BUGGY
             };
         };
 
@@ -466,8 +516,10 @@ public class WarTech {
         for (int i = 0; i < buildingCount; i++) {
             Building b = buildings[i];
             if (b != null && !b.isDestroyed() && b.faction == Faction.ENEMY) {
-                if (b.type == BuildingType.CON_YARD) eCon = b;
-                if (b.type == BuildingType.REFINERY) eRef = b;
+                if (b.type == BuildingType.CON_YARD)
+                    eCon = b;
+                if (b.type == BuildingType.REFINERY)
+                    eRef = b;
             }
         }
         double bx = (eCon != null) ? eCon.getCenterX() : (map.width - 12) * GameMap.TILE_SIZE;
@@ -516,7 +568,8 @@ public class WarTech {
             return;
         }
 
-        if (dt <= 0.0 || dt > 0.1) dt = 0.016667;
+        if (dt <= 0.0 || dt > 0.1)
+            dt = 0.016667;
 
         if (matchState != MatchState.IN_PROGRESS) {
             matchOverTimer += dt;
@@ -542,10 +595,14 @@ public class WarTech {
 
         double panX = 0;
         double panY = 0;
-        if (keyLeft) panX -= Camera.PAN_SPEED * dt;
-        if (keyRight) panX += Camera.PAN_SPEED * dt;
-        if (keyUp) panY -= Camera.PAN_SPEED * dt;
-        if (keyDown) panY += Camera.PAN_SPEED * dt;
+        if (keyLeft)
+            panX -= Camera.PAN_SPEED * dt;
+        if (keyRight)
+            panX += Camera.PAN_SPEED * dt;
+        if (keyUp)
+            panY -= Camera.PAN_SPEED * dt;
+        if (keyDown)
+            panY += Camera.PAN_SPEED * dt;
         if (panX != 0 || panY != 0) {
             camera.pan(panX, panY);
         }
@@ -554,21 +611,24 @@ public class WarTech {
         playerPowerNet = 0;
         for (int i = 0; i < buildingCount; i++) {
             var b = buildings[i];
-            if (b.isDestroyed() || b.constructing || b.faction != Faction.PLAYER) continue;
+            if (b.isDestroyed() || b.constructing || b.faction != Faction.PLAYER)
+                continue;
             playerPowerNet += b.type.powerNet;
         }
 
         map.resetVisibility();
         for (int i = 0; i < buildingCount; i++) {
             var b = buildings[i];
-            if (b.isDestroyed() || b.constructing || b.faction != Faction.PLAYER) continue;
+            if (b.isDestroyed() || b.constructing || b.faction != Faction.PLAYER)
+                continue;
             int cx = b.centerTileX();
             int cy = b.centerTileY();
             map.revealCircle(cx, cy, 9);
         }
         for (int i = 0; i < unitCount; i++) {
             var u = units[i];
-            if (u.isDestroyed() || u.faction != Faction.PLAYER) continue;
+            if (u.isDestroyed() || u.faction != Faction.PLAYER)
+                continue;
             int utx = (int) (u.x / GameMap.TILE_SIZE);
             int uty = (int) (u.y / GameMap.TILE_SIZE);
             map.revealCircle(utx, uty, u.type.sightRadiusTiles);
@@ -581,19 +641,21 @@ public class WarTech {
                 switch (u.faction) {
                     case ENEMY -> unitsKilled++;
                     case PLAYER -> unitsLost++;
-                    case null, default -> { }
+                    case null, default -> {
+                    }
                 }
-                
+
                 if (campaignManager != null) {
                     campaignManager.onUnitDestroyed(u, u.lastDamagerFaction);
                 }
-                
+
                 if (u.type.leavesWreck()) {
                     spawnWreck(u);
                 }
 
                 spawnEffect(Effect.TYPE_EXPLOSION, u.x, u.y, 0.4, u.type.radius + 11.0);
-                if (selectedUnit == u) selectedUnit = null;
+                if (selectedUnit == u)
+                    selectedUnit = null;
                 units[i] = units[--unitCount];
                 units[unitCount] = null;
             }
@@ -609,11 +671,13 @@ public class WarTech {
                 var h = u.harvester;
                 boolean creditsFull = (u.faction == Faction.PLAYER && playerCredits >= MAX_CREDITS)
                         || (u.faction == Faction.ENEMY && enemyAI.credits >= MAX_CREDITS);
-                if (h.harvestRetryTimer > 0.0) h.harvestRetryTimer -= dt;
+                if (h.harvestRetryTimer > 0.0)
+                    h.harvestRetryTimer -= dt;
                 if (h.crystalLoad > 0) {
                     Building ref = findNearestRefinery(u.x, u.y, u.faction);
                     if (ref != null) {
-                        double dSq = (ref.getCenterX() - u.x) * (ref.getCenterX() - u.x) + (ref.getCenterY() + 53.0 - u.y) * (ref.getCenterY() + 53.0 - u.y);
+                        double dSq = (ref.getCenterX() - u.x) * (ref.getCenterX() - u.x)
+                                + (ref.getCenterY() + 53.0 - u.y) * (ref.getCenterY() + 53.0 - u.y);
                         if (dSq <= REFINERY_DEPOSIT_RADIUS * REFINERY_DEPOSIT_RADIUS) {
                             if (u.faction == Faction.PLAYER) {
                                 int deposit = addPlayerCredits(h.crystalLoad);
@@ -621,7 +685,8 @@ public class WarTech {
                                     h.crystalLoad -= deposit;
                                     totalCreditsHarvested += deposit;
                                     statusToast = "DEPOSITED +" + deposit + " CREDITS";
-                                    spawnEffect(Effect.TYPE_HARVEST_DUST, ref.getCenterX(), ref.getCenterY() + 53.0, 0.4, 28.0);
+                                    spawnEffect(Effect.TYPE_HARVEST_DUST, ref.getCenterX(), ref.getCenterY() + 53.0,
+                                            0.4, 28.0);
                                 }
                                 creditsFull = playerCredits >= MAX_CREDITS;
                             } else {
@@ -649,7 +714,8 @@ public class WarTech {
                             u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
                         }
                         h.returningToRefinery = true;
-                        if (u.selected) statusToast = "CREDIT CAP REACHED - COLLECTORS HOLDING AT BASE";
+                        if (u.selected)
+                            statusToast = "CREDIT CAP REACHED - COLLECTORS HOLDING AT BASE";
                     }
                 } else if (h.returningToRefinery && !u.moving && h.crystalLoad == 0 && h.autoCollect) {
                     h.returningToRefinery = false;
@@ -685,7 +751,8 @@ public class WarTech {
                             u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
                             h.returningToRefinery = true;
                             h.harvestRetryTimer = HarvesterRole.HARVEST_RETRY_INTERVAL;
-                            if (u.selected && u.faction == Faction.PLAYER) statusToast = "COLLECTOR FULL - RETURNING TO REFINERY";
+                            if (u.selected && u.faction == Faction.PLAYER)
+                                statusToast = "COLLECTOR FULL - RETURNING TO REFINERY";
                         }
                     } else {
                         int utx = (int) (u.x / GameMap.TILE_SIZE);
@@ -700,7 +767,8 @@ public class WarTech {
                                 h.harvestTimer += dt;
                                 if (h.harvestTimer >= 1.2) {
                                     h.harvestTimer = 0.0;
-                                    int mined = Math.min(Math.min(map.crystals[cIdx], HarvesterRole.HARVEST_YIELD), HarvesterRole.MAX_LOAD - h.crystalLoad);
+                                    int mined = Math.min(Math.min(map.crystals[cIdx], HarvesterRole.HARVEST_YIELD),
+                                            HarvesterRole.MAX_LOAD - h.crystalLoad);
                                     map.crystals[cIdx] -= mined;
                                     h.crystalLoad += mined;
                                     spawnEffect(Effect.TYPE_HARVEST_DUST, u.x, u.y, 0.3, 21.0);
@@ -712,7 +780,8 @@ public class WarTech {
                                         if (ref != null) {
                                             u.moveTo(ref.getCenterX(), ref.getCenterY() + 53.0);
                                             h.returningToRefinery = true;
-                                            if (u.selected && u.faction == Faction.PLAYER) statusToast = "COLLECTOR FULL - RETURNING TO BASE";
+                                            if (u.selected && u.faction == Faction.PLAYER)
+                                                statusToast = "COLLECTOR FULL - RETURNING TO BASE";
                                         }
                                     }
                                 }
@@ -757,7 +826,7 @@ public class WarTech {
                     }
                     case DEFAULT -> {
                         boolean provokedOnly = (u.faction == Faction.NEUTRAL && u.type != UnitType.SHARD_SKITTERER)
-                            || u.type == UnitType.MEDIC;
+                                || u.type == UnitType.MEDIC;
                         if (!provokedOnly || u.threatTimer > 0.0) {
                             if (scanTurn) {
                                 combatEngine.findNearestHostile(u);
@@ -773,17 +842,25 @@ public class WarTech {
                     if (!combatEngine.isDangerousTarget(u.faction, u.attackTargetUnit)) {
                         u.attackTargetUnit = null;
                     } else {
-                        double dist = Math.sqrt((u.attackTargetUnit.x - u.x) * (u.attackTargetUnit.x - u.x) + (u.attackTargetUnit.y - u.y) * (u.attackTargetUnit.y - u.y));
-                        if (dist <= u.type.attackRange && map.hasLineOfSight(u.x, u.y, u.attackTargetUnit.x, u.attackTargetUnit.y, null)) {
+                        double dist = Math.sqrt((u.attackTargetUnit.x - u.x) * (u.attackTargetUnit.x - u.x)
+                                + (u.attackTargetUnit.y - u.y) * (u.attackTargetUnit.y - u.y));
+                        if (dist <= u.type.attackRange
+                                && map.hasLineOfSight(u.x, u.y, u.attackTargetUnit.x, u.attackTargetUnit.y, null)) {
                             combatEngine.fireProjectile(u, u.attackTargetUnit.x, u.attackTargetUnit.y);
                         }
                     }
                 }
 
-                if (u.attackTargetUnit == null && u.attackTargetBuilding != null && !u.attackTargetBuilding.isDestroyed()) {
-                    double dist = Math.sqrt((u.attackTargetBuilding.getCenterX() - u.x) * (u.attackTargetBuilding.getCenterX() - u.x) + (u.attackTargetBuilding.getCenterY() - u.y) * (u.attackTargetBuilding.getCenterY() - u.y));
-                    if (dist <= u.type.attackRange && map.hasLineOfSight(u.x, u.y, u.attackTargetBuilding.getCenterX(), u.attackTargetBuilding.getCenterY(), u.attackTargetBuilding)) {
-                        combatEngine.fireProjectile(u, u.attackTargetBuilding.getCenterX(), u.attackTargetBuilding.getCenterY());
+                if (u.attackTargetUnit == null && u.attackTargetBuilding != null
+                        && !u.attackTargetBuilding.isDestroyed()) {
+                    double dist = Math.sqrt(
+                            (u.attackTargetBuilding.getCenterX() - u.x) * (u.attackTargetBuilding.getCenterX() - u.x)
+                                    + (u.attackTargetBuilding.getCenterY() - u.y)
+                                            * (u.attackTargetBuilding.getCenterY() - u.y));
+                    if (dist <= u.type.attackRange && map.hasLineOfSight(u.x, u.y, u.attackTargetBuilding.getCenterX(),
+                            u.attackTargetBuilding.getCenterY(), u.attackTargetBuilding)) {
+                        combatEngine.fireProjectile(u, u.attackTargetBuilding.getCenterX(),
+                                u.attackTargetBuilding.getCenterY());
                     }
                 }
             }
@@ -885,7 +962,8 @@ public class WarTech {
     }
 
     public void damageBuilding(Building b, int dmg, Faction fromFaction) {
-        if (b == null || b.isDestroyed()) return;
+        if (b == null || b.isDestroyed())
+            return;
         b.takeDamage(dmg, fromFaction);
         if (b.isDestroyed()) {
             spawnEffect(Effect.TYPE_EXPLOSION, b.getCenterX(), b.getCenterY(), 0.6, 64.0);
@@ -924,7 +1002,8 @@ public class WarTech {
             }
             for (int i = 0; i < unitCount; i++) {
                 var uA = units[i];
-                if (uA == null || uA.isDestroyed()) continue;
+                if (uA == null || uA.isDestroyed())
+                    continue;
                 double rA = uA.type.radius * 0.85;
                 double massA = uA.type.mass;
 
@@ -970,8 +1049,10 @@ public class WarTech {
                                             double ratioB = effMassA / (effMassA + effMassB);
 
                                             if (uB.faction == uA.faction) {
-                                                boolean parkedA = !uA.moving && !uA.isYielding() && UnitNavigation.inSingleLane(uA, map);
-                                                boolean parkedB = !uB.moving && !uB.isYielding() && UnitNavigation.inSingleLane(uB, map);
+                                                boolean parkedA = !uA.moving && !uA.isYielding()
+                                                        && UnitNavigation.inSingleLane(uA, map);
+                                                boolean parkedB = !uB.moving && !uB.isYielding()
+                                                        && UnitNavigation.inSingleLane(uB, map);
                                                 if (parkedA && !parkedB) {
                                                     ratioA = 0.0;
                                                     ratioB = 1.0;
@@ -999,7 +1080,8 @@ public class WarTech {
 
         for (int i = 0; i < unitCount; i++) {
             var u = units[i];
-            if (u == null || u.isDestroyed()) continue;
+            if (u == null || u.isDestroyed())
+                continue;
             UnitNavigation.resolveObstacleOverlap(u, map, u.getObstacleClearance(), null);
         }
         spatialGrid.rebuild(units, unitCount);
@@ -1010,7 +1092,8 @@ public class WarTech {
         double bestDistSq = Double.MAX_VALUE;
         for (int i = 0; i < buildingCount; i++) {
             var b = buildings[i];
-            if (b.isDestroyed() || b.constructing || b.faction != faction || b.type != BuildingType.REFINERY) continue;
+            if (b.isDestroyed() || b.constructing || b.faction != faction || b.type != BuildingType.REFINERY)
+                continue;
             double d = (b.getCenterX() - px) * (b.getCenterX() - px) + (b.getCenterY() - py) * (b.getCenterY() - py);
             if (d < bestDistSq) {
                 bestDistSq = d;
@@ -1025,7 +1108,8 @@ public class WarTech {
         double bestDistSq = Double.MAX_VALUE;
         for (int i = 0; i < buildingCount; i++) {
             var b = buildings[i];
-            if (b.isDestroyed() || b.faction != faction) continue;
+            if (b.isDestroyed() || b.faction != faction)
+                continue;
             double d = (b.getCenterX() - px) * (b.getCenterX() - px) + (b.getCenterY() - py) * (b.getCenterY() - py);
             if (d < bestDistSq) {
                 bestDistSq = d;
@@ -1037,7 +1121,8 @@ public class WarTech {
 
     public boolean withinBaseLeash(double px, double py, Faction faction) {
         Building b = findNearestBuilding(px, py, faction);
-        if (b == null) return true;
+        if (b == null)
+            return true;
         double dx = b.getCenterX() - px;
         double dy = b.getCenterY() - py;
         double leash = RepairRole.MECHANIC_LEASH_RANGE;
@@ -1045,7 +1130,8 @@ public class WarTech {
     }
 
     public boolean hasRadar(Faction f) {
-        if (f == Faction.PLAYER && playerPowerNet < 0) return false;
+        if (f == Faction.PLAYER && playerPowerNet < 0)
+            return false;
         for (int i = 0; i < buildingCount; i++) {
             var b = buildings[i];
             if (!b.isDestroyed() && !b.constructing && b.faction == f && b.type == BuildingType.RADAR) {
@@ -1055,35 +1141,111 @@ public class WarTech {
         return false;
     }
 
-    public boolean canProduce(BuildingType bt) { return productionSystem.canProduce(bt); }
-    public boolean canProduce(UnitType ut) { return productionSystem.canProduce(ut); }
-    public BuildingType getAvailableBuilding(int slot) { return productionSystem.getAvailableBuilding(slot); }
-    public UnitType getAvailableUnit(int slot) { return productionSystem.getAvailableUnit(slot); }
-    public void trainUnit(UnitType ut) { productionSystem.trainUnit(ut); }
-    public void cancelUnit(UnitType ut) { productionSystem.cancelUnit(ut); }
-    public void sellSelectedBuilding() { productionSystem.sellSelectedBuilding(); }
-    public void repairSelectedBuilding() { productionSystem.repairSelectedBuilding(); }
-    public Building findProductionBuilding(BuildingType type, Faction faction) { return productionSystem.findProductionBuilding(type, faction); }
-    public void setPrimaryBuilding(Building target) { productionSystem.setPrimaryBuilding(target); }
-    public Building findBuilding(BuildingType type, Faction faction) { return productionSystem.findBuilding(type, faction); }
-    public int countBuildings(BuildingType type, Faction faction) { return productionSystem.countBuildings(type, faction); }
-    public int countUnits(UnitType type, Faction faction) { return productionSystem.countUnits(type, faction); }
-    public int countQueuedUnits(UnitType type, Faction faction) { return productionSystem.countQueuedUnits(type, faction); }
+    public boolean canProduce(BuildingType bt) {
+        return productionSystem.canProduce(bt);
+    }
 
-    public boolean isDangerousTarget(Faction myFaction, Unit target) { return combatEngine.isDangerousTarget(myFaction, target); }
-    public boolean isRivalBuilding(Faction myFaction, Building b) { return combatEngine.isRivalBuilding(myFaction, b); }
-    public Unit findDangerousUnitInRange(Unit u, double range) { return combatEngine.findDangerousUnitInRange(u, range); }
-    public void acquireHuntTarget(Unit u) { combatEngine.acquireHuntTarget(u); }
+    public boolean canProduce(UnitType ut) {
+        return productionSystem.canProduce(ut);
+    }
+
+    public BuildingType getAvailableBuilding(int slot) {
+        return productionSystem.getAvailableBuilding(slot);
+    }
+
+    public UnitType getAvailableUnit(int slot) {
+        return productionSystem.getAvailableUnit(slot);
+    }
+
+    public void trainUnit(UnitType ut) {
+        productionSystem.trainUnit(ut);
+    }
+
+    public void cancelUnit(UnitType ut) {
+        productionSystem.cancelUnit(ut);
+    }
+
+    public void sellSelectedBuilding() {
+        productionSystem.sellSelectedBuilding();
+    }
+
+    public void repairSelectedBuilding() {
+        productionSystem.repairSelectedBuilding();
+    }
+
+    public Building findProductionBuilding(BuildingType type, Faction faction) {
+        return productionSystem.findProductionBuilding(type, faction);
+    }
+
+    public void setPrimaryBuilding(Building target) {
+        productionSystem.setPrimaryBuilding(target);
+    }
+
+    public Building findBuilding(BuildingType type, Faction faction) {
+        return productionSystem.findBuilding(type, faction);
+    }
+
+    public int countBuildings(BuildingType type, Faction faction) {
+        return productionSystem.countBuildings(type, faction);
+    }
+
+    public int countUnits(UnitType type, Faction faction) {
+        return productionSystem.countUnits(type, faction);
+    }
+
+    public int countQueuedUnits(UnitType type, Faction faction) {
+        return productionSystem.countQueuedUnits(type, faction);
+    }
+
+    public boolean isDangerousTarget(Faction myFaction, Unit target) {
+        return combatEngine.isDangerousTarget(myFaction, target);
+    }
+
+    public boolean isRivalBuilding(Faction myFaction, Building b) {
+        return combatEngine.isRivalBuilding(myFaction, b);
+    }
+
+    public Unit findDangerousUnitInRange(Unit u, double range) {
+        return combatEngine.findDangerousUnitInRange(u, range);
+    }
+
+    public void acquireHuntTarget(Unit u) {
+        combatEngine.acquireHuntTarget(u);
+    }
+
     public void applySplash(double x, double y, double radius, int dmg, Faction fromFaction, Unit directVictim) {
         combatEngine.applySplash(x, y, radius, dmg, fromFaction, directVictim);
     }
 
-    public void issueRightClickOrder(double worldX, double worldY) { inputController.orders.issueRightClickOrder(worldX, worldY); }
-    public void stopSelectedUnits() { inputController.orders.stopSelectedUnits(); }
-    public void guardSelectedUnits() { inputController.orders.guardSelectedUnits(); }
-    public void huntSelectedUnits() { inputController.orders.huntSelectedUnits(); }
-    public void sendCollectorToHarvest(Unit u) { inputController.orders.sendCollectorToHarvest(u); }
-    public void toggleCollectSelectedCollector() { inputController.orders.toggleCollectSelectedCollector(); }
-    public void unloadSelectedCollector() { inputController.orders.unloadSelectedCollector(); }
-    public void toggleRepairSelectedMechanic() { inputController.orders.toggleRepairSelectedMechanic(); }
+    public void issueRightClickOrder(double worldX, double worldY) {
+        inputController.orders.issueRightClickOrder(worldX, worldY);
+    }
+
+    public void stopSelectedUnits() {
+        inputController.orders.stopSelectedUnits();
+    }
+
+    public void guardSelectedUnits() {
+        inputController.orders.guardSelectedUnits();
+    }
+
+    public void huntSelectedUnits() {
+        inputController.orders.huntSelectedUnits();
+    }
+
+    public void sendCollectorToHarvest(Unit u) {
+        inputController.orders.sendCollectorToHarvest(u);
+    }
+
+    public void toggleCollectSelectedCollector() {
+        inputController.orders.toggleCollectSelectedCollector();
+    }
+
+    public void unloadSelectedCollector() {
+        inputController.orders.unloadSelectedCollector();
+    }
+
+    public void toggleRepairSelectedMechanic() {
+        inputController.orders.toggleRepairSelectedMechanic();
+    }
 }
