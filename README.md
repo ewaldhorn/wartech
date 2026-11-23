@@ -12,7 +12,7 @@ old loops.
 
 Play it in your browser: [WarTech](https://ewaldhorn.github.io/wartech/)
 
-Made by [Ewald Horn](https://nofuss.co.za/) — check out my other [toys](https://nofuss.co.za/toys/).
+Made by [Ewald Horn](https://nofuss.co.za/) — check out my other [toys](https://nofuss.co.za/toys/). This is one of the research projects I did in order to support my [commercial Java optimisation work](https://nofuss.co.za/legacy-delphi-pascal-modernisation/) where I take old Java desktop and CLI solutions and port them to the web. This was a lot of fun to build as well, not gonna lie! Hope you enjoy the game, I've burned quite a bit of time on it myself.
 
 ![WarTech Screenshot](wartech.png)
 
